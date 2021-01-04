@@ -21,11 +21,27 @@ description:         Please see the README on GitHub at <https://github.com/jord
 
 dependencies:
 - base >= 4.7 && < 5
+- rio
+- GLFW-b >=3.3 && <4
+- OpenGL >=3.0 && <4
+- bindings-GLFW >=3.3 && <4
+- JuicyPixels >=3.3 && <4
+- freetype2 >=0.2 && <0.3
+- time 
 
 library:
   engine: 
     source-dirs: engine
+    # exposed-modules: Graphics.Game.Hagame
+    # dependencies:
+    # - GLFW-b >=3.3 && <4
+    # - OpenGL >=3.0 && <4
+    # - bindings-GLFW >=3.3 && <4
+    # - JuicyPixels >=3.3 && <4
+    # - freetype2 >=0.2 && <0.3
 
-# executables:
-
+executables:
+  blank-window:
+    source-dirs: examples
+    main: BlankWindow.hs
 # tests:

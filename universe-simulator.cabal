@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b539c5dbdf36c977718e1721940b84e2b502a7745fb516847a36c811c8aeacca
+-- hash: 78e85dbc89deb02cfaed0515b3b413f5910fc1e36fcb70e3029b62b2a30b24d0
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -29,5 +29,29 @@ library
   other-modules:
       Paths_universe_simulator
   build-depends:
-      base >=4.7 && <5
+      GLFW-b >=3.3 && <4
+    , JuicyPixels >=3.3 && <4
+    , OpenGL >=3.0 && <4
+    , base >=4.7 && <5
+    , bindings-GLFW >=3.3 && <4
+    , freetype2 >=0.2 && <0.3
+    , rio
+    , time
+  default-language: Haskell2010
+
+executable blank-window
+  main-is: BlankWindow.hs
+  other-modules:
+      Paths_universe_simulator
+  hs-source-dirs:
+      examples
+  build-depends:
+      GLFW-b >=3.3 && <4
+    , JuicyPixels >=3.3 && <4
+    , OpenGL >=3.0 && <4
+    , base >=4.7 && <5
+    , bindings-GLFW >=3.3 && <4
+    , freetype2 >=0.2 && <0.3
+    , rio
+    , time
   default-language: Haskell2010
