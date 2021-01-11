@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 796a1f92b315b2fdba79229487df275b98d5e1a5647b3c20e26d7e10a6ab81ac
+-- hash: 953667e0d7ad8986e151e3ffeaec9a8c8ba63c5d9422ee2f5ea71b679f13e83e
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -26,33 +26,63 @@ source-repository head
   location: https://github.com/jordanemedlock/universe_simulator
 
 library
+  exposed-modules:
+      Shader
   other-modules:
       Paths_universe_simulator
+  hs-source-dirs:
+      engine
+  default-extensions: QuasiQuotes OverloadedStrings
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
     , OpenGL >=3.0 && <4
     , base >=4.7 && <5
     , bindings-GLFW >=3.3 && <4
+    , bytestring >=0.10 && <1
+    , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
-    , rio
+    , raw-strings-qq
     , time
   default-language: Haskell2010
 
 executable blank-window
-  main-is: BlankWindow.hs
+  main-is: Main.hs
   other-modules:
-      Box
       Paths_universe_simulator
   hs-source-dirs:
-      examples
+      examples/blank-window
+  default-extensions: QuasiQuotes OverloadedStrings
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
     , OpenGL >=3.0 && <4
     , base >=4.7 && <5
     , bindings-GLFW >=3.3 && <4
+    , bytestring >=0.10 && <1
+    , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
-    , rio
+    , raw-strings-qq
     , time
+  default-language: Haskell2010
+
+executable box
+  main-is: Main.hs
+  other-modules:
+      Paths_universe_simulator
+  hs-source-dirs:
+      examples/box
+  default-extensions: QuasiQuotes OverloadedStrings
+  build-depends:
+      GLFW-b >=3.3 && <4
+    , JuicyPixels >=3.3 && <4
+    , OpenGL >=3.0 && <4
+    , base >=4.7 && <5
+    , bindings-GLFW >=3.3 && <4
+    , bytestring >=0.10 && <1
+    , filepath >=1.4 && <2
+    , freetype2 >=0.2 && <0.3
+    , raw-strings-qq
+    , time
+    , universe-simulator
   default-language: Haskell2010

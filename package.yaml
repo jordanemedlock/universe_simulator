@@ -21,27 +21,38 @@ description:         Please see the README on GitHub at <https://github.com/jord
 
 dependencies:
 - base >= 4.7 && < 5
-- rio
 - GLFW-b >=3.3 && <4
 - OpenGL >=3.0 && <4
 - bindings-GLFW >=3.3 && <4
 - JuicyPixels >=3.3 && <4
 - freetype2 >=0.2 && <0.3
+- bytestring >=0.10 && <1
+- filepath >=1.4 && <2
+- raw-strings-qq
 - time 
 
 library:
-  engine: 
-    source-dirs: engine
-    # exposed-modules: Graphics.Game.Hagame
-    # dependencies:
-    # - GLFW-b >=3.3 && <4
-    # - OpenGL >=3.0 && <4
-    # - bindings-GLFW >=3.3 && <4
-    # - JuicyPixels >=3.3 && <4
-    # - freetype2 >=0.2 && <0.3
+  source-dirs: engine
+  exposed-modules: Shader
+  # dependencies:
+  # - GLFW-b >=3.3 && <4
+  # - OpenGL >=3.0 && <4
+  # - bindings-GLFW >=3.3 && <4
+  # - JuicyPixels >=3.3 && <4
+  # - freetype2 >=0.2 && <0.3
 
 executables:
   blank-window:
-    source-dirs: examples
-    main: BlankWindow.hs
+    source-dirs: examples/blank-window
+    main: Main.hs
+  box:
+    source-dirs: examples/box
+    main: Main.hs
+    dependencies:
+    - universe-simulator
 # tests:
+
+
+default-extensions:
+- QuasiQuotes
+- OverloadedStrings
