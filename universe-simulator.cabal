@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 78e85dbc89deb02cfaed0515b3b413f5910fc1e36fcb70e3029b62b2a30b24d0
+-- hash: 796a1f92b315b2fdba79229487df275b98d5e1a5647b3c20e26d7e10a6ab81ac
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -42,6 +42,7 @@ library
 executable blank-window
   main-is: BlankWindow.hs
   other-modules:
+      Box
       Paths_universe_simulator
   hs-source-dirs:
       examples
