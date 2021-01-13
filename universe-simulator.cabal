@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b539c5dbdf36c977718e1721940b84e2b502a7745fb516847a36c811c8aeacca
+-- hash: 763afdbf6d039edea8ebb5ce89c0f9e65a03d9ac78a801a870a9fae342ce6919
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -26,8 +26,70 @@ source-repository head
   location: https://github.com/jordanemedlock/universe_simulator
 
 library
+  exposed-modules:
+      Shader
   other-modules:
       Paths_universe_simulator
+  hs-source-dirs:
+      engine
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists
   build-depends:
-      base >=4.7 && <5
+      GLFW-b >=3.3 && <4
+    , JuicyPixels >=3.3 && <4
+    , OpenGL >=3.0 && <4
+    , base >=4.7 && <5
+    , bindings-GLFW >=3.3 && <4
+    , bytestring >=0.10 && <1
+    , filepath >=1.4 && <2
+    , freetype2 >=0.2 && <0.3
+    , linear
+    , matrix >=0.3 && <0.4
+    , raw-strings-qq
+    , time
+  default-language: Haskell2010
+
+executable blank-window
+  main-is: Main.hs
+  other-modules:
+      Paths_universe_simulator
+  hs-source-dirs:
+      examples/blank-window
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists
+  build-depends:
+      GLFW-b >=3.3 && <4
+    , JuicyPixels >=3.3 && <4
+    , OpenGL >=3.0 && <4
+    , base >=4.7 && <5
+    , bindings-GLFW >=3.3 && <4
+    , bytestring >=0.10 && <1
+    , filepath >=1.4 && <2
+    , freetype2 >=0.2 && <0.3
+    , linear
+    , matrix >=0.3 && <0.4
+    , raw-strings-qq
+    , time
+  default-language: Haskell2010
+
+executable box
+  main-is: Main.hs
+  other-modules:
+      Paths_universe_simulator
+  hs-source-dirs:
+      examples/box
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      GLFW-b >=3.3 && <4
+    , JuicyPixels >=3.3 && <4
+    , OpenGL >=3.0 && <4
+    , base >=4.7 && <5
+    , bindings-GLFW >=3.3 && <4
+    , bytestring >=0.10 && <1
+    , filepath >=1.4 && <2
+    , freetype2 >=0.2 && <0.3
+    , linear
+    , matrix >=0.3 && <0.4
+    , raw-strings-qq
+    , time
+    , universe-simulator
   default-language: Haskell2010
