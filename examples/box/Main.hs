@@ -214,12 +214,12 @@ mainLoop window previousTime (GameState program cube) = do
     GL.uniform modelLoc $= model
     GL.uniform colorLoc $= (GL.Color4 1.0 0.0 0.0 1.0 :: GL.Color4 Float)
 
-    view <- lookAtMatrix (V3 1 0 1) (V3 0 0 0) (V3 0 1 0) :: IO (GL.GLmatrix Float)
+    view <- lookAtMatrix (V3 1 1 1) (V3 0 0 0) (V3 0 1 0) :: IO (GL.GLmatrix Float)
 
     GL.uniform viewLoc $= view
 
     GL.bindVertexArrayObject $= Just cube
-    GL.drawArrays GL.Triangles 0 6
+    GL.drawArrays GL.Triangles 0 36 -- size of the cube array
     GL.bindVertexArrayObject $= Nothing
 
     GLFW.swapBuffers window
