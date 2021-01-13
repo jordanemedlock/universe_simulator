@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 953667e0d7ad8986e151e3ffeaec9a8c8ba63c5d9422ee2f5ea71b679f13e83e
+-- hash: 763afdbf6d039edea8ebb5ce89c0f9e65a03d9ac78a801a870a9fae342ce6919
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -32,7 +32,7 @@ library
       Paths_universe_simulator
   hs-source-dirs:
       engine
-  default-extensions: QuasiQuotes OverloadedStrings
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -42,6 +42,8 @@ library
     , bytestring >=0.10 && <1
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
+    , linear
+    , matrix >=0.3 && <0.4
     , raw-strings-qq
     , time
   default-language: Haskell2010
@@ -52,7 +54,7 @@ executable blank-window
       Paths_universe_simulator
   hs-source-dirs:
       examples/blank-window
-  default-extensions: QuasiQuotes OverloadedStrings
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -62,6 +64,8 @@ executable blank-window
     , bytestring >=0.10 && <1
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
+    , linear
+    , matrix >=0.3 && <0.4
     , raw-strings-qq
     , time
   default-language: Haskell2010
@@ -72,7 +76,8 @@ executable box
       Paths_universe_simulator
   hs-source-dirs:
       examples/box
-  default-extensions: QuasiQuotes OverloadedStrings
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -82,6 +87,8 @@ executable box
     , bytestring >=0.10 && <1
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
+    , linear
+    , matrix >=0.3 && <0.4
     , raw-strings-qq
     , time
     , universe-simulator
