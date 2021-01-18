@@ -34,6 +34,10 @@ data GameState = GameState
 vert = [r|
 #version 330 core
 layout (location = 0) in vec3 position;
+layout (location = 1) in vec3 normal;
+
+out vec3 FragPos;
+out vec3 Normal;
 
 uniform mat4 projection;
 uniform mat4 view; 
@@ -43,65 +47,85 @@ uniform mat4 model;
 void main()
 {
     gl_Position = projection * view * model * vec4(position, 1.0);
+    FragPos = vec3(model * vec4(position, 1.0));
+    Normal = normal;
 }
 |]
 
 frag = [r|
 #version 330 core
-out vec4 color;
 
-uniform vec4 spriteColor;
+in vec3 FragPos;
+in vec3 Normal;
+
+out vec4 FragColor;
+
+uniform vec4 ambientColor;
+uniform vec4 objectColor;
+
+uniform vec3 lightPos;
+uniform vec4 lightColor;
 
 void main()
 {
-    color = spriteColor;
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(lightPos - FragPos);  
+
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec4 diffuse = diff * lightColor;
+
+    float ambientStrength = 0.1;
+    vec4 ambient = ambientStrength * ambientColor;
+
+    vec4 result = (ambient + diffuse) * objectColor;
+    FragColor = result;
 }
 |]
 
 createCube :: IO GL.VertexArrayObject
 createCube = do
     
-    let verticesL = [ (-0.5), (-0.5), (-0.5)
-                    , ( 0.5), (-0.5), (-0.5)
-                    , ( 0.5), ( 0.5), (-0.5)
-                    , ( 0.5), ( 0.5), (-0.5)
-                    , (-0.5), ( 0.5), (-0.5)
-                    , (-0.5), (-0.5), (-0.5)
+    let verticesL = [ (-0.5), (-0.5), (-0.5), ( 0.0), ( 0.0), (-1.0)
+                    , ( 0.5), (-0.5), (-0.5), ( 0.0), ( 0.0), (-1.0)
+                    , ( 0.5), ( 0.5), (-0.5), ( 0.0), ( 0.0), (-1.0)
+                    , ( 0.5), ( 0.5), (-0.5), ( 0.0), ( 0.0), (-1.0)
+                    , (-0.5), ( 0.5), (-0.5), ( 0.0), ( 0.0), (-1.0)
+                    , (-0.5), (-0.5), (-0.5), ( 0.0), ( 0.0), (-1.0)
 
-                    , (-0.5), (-0.5), ( 0.5)
-                    , ( 0.5), (-0.5), ( 0.5)
-                    , ( 0.5), ( 0.5), ( 0.5)
-                    , ( 0.5), ( 0.5), ( 0.5)
-                    , (-0.5), ( 0.5), ( 0.5)
-                    , (-0.5), (-0.5), ( 0.5)
+                    , (-0.5), (-0.5), ( 0.5), ( 0.0), ( 0.0), ( 1.0)
+                    , ( 0.5), (-0.5), ( 0.5), ( 0.0), ( 0.0), ( 1.0)
+                    , ( 0.5), ( 0.5), ( 0.5), ( 0.0), ( 0.0), ( 1.0)
+                    , ( 0.5), ( 0.5), ( 0.5), ( 0.0), ( 0.0), ( 1.0)
+                    , (-0.5), ( 0.5), ( 0.5), ( 0.0), ( 0.0), ( 1.0)
+                    , (-0.5), (-0.5), ( 0.5), ( 0.0), ( 0.0), ( 1.0)
 
-                    , (-0.5), ( 0.5), ( 0.5)
-                    , (-0.5), ( 0.5), (-0.5)
-                    , (-0.5), (-0.5), (-0.5)
-                    , (-0.5), (-0.5), (-0.5)
-                    , (-0.5), (-0.5), ( 0.5)
-                    , (-0.5), ( 0.5), ( 0.5)
+                    , (-0.5), ( 0.5), ( 0.5), (-1.0), ( 0.0), ( 0.0)
+                    , (-0.5), ( 0.5), (-0.5), (-1.0), ( 0.0), ( 0.0)
+                    , (-0.5), (-0.5), (-0.5), (-1.0), ( 0.0), ( 0.0)
+                    , (-0.5), (-0.5), (-0.5), (-1.0), ( 0.0), ( 0.0)
+                    , (-0.5), (-0.5), ( 0.5), (-1.0), ( 0.0), ( 0.0)
+                    , (-0.5), ( 0.5), ( 0.5), (-1.0), ( 0.0), ( 0.0)
 
-                    , ( 0.5), ( 0.5), ( 0.5)
-                    , ( 0.5), ( 0.5), (-0.5)
-                    , ( 0.5), (-0.5), (-0.5)
-                    , ( 0.5), (-0.5), (-0.5)
-                    , ( 0.5), (-0.5), ( 0.5)
-                    , ( 0.5), ( 0.5), ( 0.5)
+                    , ( 0.5), ( 0.5), ( 0.5), ( 1.0), ( 0.0), ( 0.0)
+                    , ( 0.5), ( 0.5), (-0.5), ( 1.0), ( 0.0), ( 0.0)
+                    , ( 0.5), (-0.5), (-0.5), ( 1.0), ( 0.0), ( 0.0)
+                    , ( 0.5), (-0.5), (-0.5), ( 1.0), ( 0.0), ( 0.0)
+                    , ( 0.5), (-0.5), ( 0.5), ( 1.0), ( 0.0), ( 0.0)
+                    , ( 0.5), ( 0.5), ( 0.5), ( 1.0), ( 0.0), ( 0.0)
 
-                    , (-0.5), (-0.5), (-0.5)
-                    , ( 0.5), (-0.5), (-0.5)
-                    , ( 0.5), (-0.5), ( 0.5)
-                    , ( 0.5), (-0.5), ( 0.5)
-                    , (-0.5), (-0.5), ( 0.5)
-                    , (-0.5), (-0.5), (-0.5)
+                    , (-0.5), (-0.5), (-0.5), ( 0.0), (-1.0), ( 0.0)
+                    , ( 0.5), (-0.5), (-0.5), ( 0.0), (-1.0), ( 0.0)
+                    , ( 0.5), (-0.5), ( 0.5), ( 0.0), (-1.0), ( 0.0)
+                    , ( 0.5), (-0.5), ( 0.5), ( 0.0), (-1.0), ( 0.0)
+                    , (-0.5), (-0.5), ( 0.5), ( 0.0), (-1.0), ( 0.0)
+                    , (-0.5), (-0.5), (-0.5), ( 0.0), (-1.0), ( 0.0)
 
-                    , (-0.5), ( 0.5), (-0.5)
-                    , ( 0.5), ( 0.5), (-0.5)
-                    , ( 0.5), ( 0.5), ( 0.5)
-                    , ( 0.5), ( 0.5), ( 0.5)
-                    , (-0.5), ( 0.5), ( 0.5)
-                    , (-0.5), ( 0.5), (-0.5)
+                    , (-0.5), ( 0.5), (-0.5), ( 0.0), ( 1.0), ( 0.0)
+                    , ( 0.5), ( 0.5), (-0.5), ( 0.0), ( 1.0), ( 0.0)
+                    , ( 0.5), ( 0.5), ( 0.5), ( 0.0), ( 1.0), ( 0.0)
+                    , ( 0.5), ( 0.5), ( 0.5), ( 0.0), ( 1.0), ( 0.0)
+                    , (-0.5), ( 0.5), ( 0.5), ( 0.0), ( 1.0), ( 0.0)
+                    , (-0.5), ( 0.5), (-0.5), ( 0.0), ( 1.0), ( 0.0)
                     ] :: [Float]
     vertices <- newArray verticesL
     let verticesSize = fromIntegral $ sizeOf (0.0 :: Float) * length verticesL
@@ -114,8 +138,11 @@ createCube = do
     GL.bindBuffer GL.ArrayBuffer $= Just vbo
     GL.bufferData GL.ArrayBuffer $= (verticesSize, vertices, GL.StaticDraw)
 
-    GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ 3 * sizeOf (0.0 :: Float)) nullPtr)
+    GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ 6 * sizeOf (0.0 :: Float)) nullPtr)
     GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
+
+    GL.vertexAttribPointer (GL.AttribLocation 1) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ 6 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (3 * (sizeOf (0.0 :: Float)))))
+    GL.vertexAttribArray (GL.AttribLocation 1) $= GL.Enabled
 
     GL.bindBuffer GL.ArrayBuffer $= Nothing
     GL.bindVertexArrayObject $= Nothing
@@ -208,11 +235,19 @@ mainLoop window previousTime (GameState program cube) = do
         ]
 
     modelLoc <- GL.get $ GL.uniformLocation program "model"
-    colorLoc <- GL.get $ GL.uniformLocation program "spriteColor"
+    objectColorLoc <- GL.get $ GL.uniformLocation program "objectColor"
+    ambientColorLoc <- GL.get $ GL.uniformLocation program "ambientColor"
     viewLoc <- GL.get $ GL.uniformLocation program "view"
+    
+    lightColorLoc <- GL.get $ GL.uniformLocation program "lightColor"
+    lightPosLoc <- GL.get $ GL.uniformLocation program "lightPos"
 
     GL.uniform modelLoc $= model
-    GL.uniform colorLoc $= (GL.Color4 1.0 0.0 0.0 1.0 :: GL.Color4 Float)
+    GL.uniform objectColorLoc $= (GL.Color4 1.0 0.5 0.3 1.0 :: GL.Color4 Float)
+    GL.uniform ambientColorLoc $= (GL.Color4 1.0 1.0 1.0 1.0 :: GL.Color4 Float)
+
+    GL.uniform lightPosLoc $= (GL.Vector3 1.1 1.0 2.0 :: GL.Vector3 Float)
+    GL.uniform lightColorLoc $= (GL.Color4 1.0 1.0 1.0 1.0 :: GL.Color4 Float)
 
     view <- lookAtMatrix (V3 1 1 1) (V3 0 0 0) (V3 0 1 0) :: IO (GL.GLmatrix Float)
 
