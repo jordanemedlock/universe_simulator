@@ -46,9 +46,10 @@ uniform mat4 model;
 
 void main()
 {
-    gl_Position = projection * view * model * vec4(position, 1.0);
     FragPos = vec3(model * vec4(position, 1.0));
-    Normal = normal;
+    Normal = mat3(transpose(inverse(model))) * normal;
+
+    gl_Position = projection * view * vec4(FragPos, 1.0);
 }
 |]
 
@@ -63,21 +64,34 @@ out vec4 FragColor;
 uniform vec4 ambientColor;
 uniform vec4 objectColor;
 
+uniform vec3 viewPos;
+
 uniform vec3 lightPos;
 uniform vec4 lightColor;
 
 void main()
 {
+    // constants
+    float ambientStrength = 0.1;
+    float specularStrength = 0.5;
+
+    // diffuse
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(lightPos - FragPos);  
-
     float diff = max(dot(norm, lightDir), 0.0);
     vec4 diffuse = diff * lightColor;
 
-    float ambientStrength = 0.1;
+    // ambient
     vec4 ambient = ambientStrength * ambientColor;
 
-    vec4 result = (ambient + diffuse) * objectColor;
+    // specular
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    vec4 specular = specularStrength * spec * lightColor;
+
+    // result
+    vec4 result = (ambient + diffuse + specular) * objectColor;
     FragColor = result;
 }
 |]
@@ -238,6 +252,8 @@ mainLoop window previousTime (GameState program cube) = do
     objectColorLoc <- GL.get $ GL.uniformLocation program "objectColor"
     ambientColorLoc <- GL.get $ GL.uniformLocation program "ambientColor"
     viewLoc <- GL.get $ GL.uniformLocation program "view"
+
+    viewPosLoc <- GL.get $ GL.uniformLocation program "viewPos"
     
     lightColorLoc <- GL.get $ GL.uniformLocation program "lightColor"
     lightPosLoc <- GL.get $ GL.uniformLocation program "lightPos"
@@ -245,6 +261,8 @@ mainLoop window previousTime (GameState program cube) = do
     GL.uniform modelLoc $= model
     GL.uniform objectColorLoc $= (GL.Color4 1.0 0.5 0.3 1.0 :: GL.Color4 Float)
     GL.uniform ambientColorLoc $= (GL.Color4 1.0 1.0 1.0 1.0 :: GL.Color4 Float)
+
+    GL.uniform viewPosLoc $= (GL.Vector3 1 1 1 :: GL.Vector3 Float)
 
     GL.uniform lightPosLoc $= (GL.Vector3 1.1 1.0 2.0 :: GL.Vector3 Float)
     GL.uniform lightColorLoc $= (GL.Color4 1.0 1.0 1.0 1.0 :: GL.Color4 Float)
