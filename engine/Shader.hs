@@ -6,8 +6,8 @@ import qualified Graphics.Rendering.OpenGL as GL
 import Graphics.Rendering.OpenGL (($=))
 import qualified Data.ByteString as BS
 import System.FilePath.Posix (takeExtensions)
-
-
+import Control.Monad.Trans.Reader
+import Control.Monad.IO.Class
 
 
 -- | Compiles shader from its strings
@@ -72,3 +72,50 @@ compileShader vertexSource fragmentSource mGeometrySource = do
 
                     return $ Just program
                 else return Nothing
+
+type ShaderMonad = ReaderT GL.Program
+type VAOMonad = ReaderT GL.VertexArrayObject
+type VBOMonad = ReaderT GL.BufferObject
+
+withShader :: MonadIO m => GL.Program -> ShaderMonad m a -> m a
+withShader prog f = do
+    liftIO $ GL.currentProgram $= Just prog
+    value <- runReaderT f prog
+    liftIO $ GL.currentProgram $= Nothing
+    return value
+
+($==) :: (GL.Uniform a, MonadIO m) => String -> a -> ShaderMonad m a
+name $== value = do
+    prog <- ask
+    location <- liftIO $ GL.uniformLocation prog name
+    liftIO $ GL.uniform location $= value
+    return value
+
+
+withVAO :: MonadIO m => GL.VertexArrayObject -> VAOMonad m a -> m a
+withVAO vao f = do
+    liftIO $ GL.bindVertexArrayObject $= Just vao
+    value <- runReaderT f vao
+    liftIO $ GL.bindVertexArrayObject $= Nothing
+    return value
+
+initVAO :: MonadIO m => VAOMonad m () -> m GL.VertexArrayObject
+initVAO f = do
+    vao <- liftIO GL.genObjectName
+    withVAO vao f
+    return vao
+
+
+withVBO :: MonadIO m => GL.BufferObject -> GL.BufferTarget -> VBOMonad m a -> m a
+withVBO vbo target f = do
+    liftIO $ GL.bindBuffer target $= Just vbo
+    value <- runReaderT f vbo
+    liftIO $ GL.bindBuffer target $= Nothing
+    return value
+
+tempVBO :: MonadIO m => GL.BufferTarget -> VBOMonad m a -> m a
+tempVBO target f = do
+    vbo <- liftIO GL.genObjectName
+    value <- withVBO vbo target f
+    liftIO $ GL.deleteObjectName vbo
+    return value

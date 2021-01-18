@@ -32,10 +32,15 @@ dependencies:
 - linear
 - raw-strings-qq
 - time 
+- transformers
 
 library:
   source-dirs: engine
-  exposed-modules: Shader
+  exposed-modules: 
+  - Shader
+  - Vector
+  - Utils
+  - Window
   # dependencies:
   # - GLFW-b >=3.3 && <4
   # - OpenGL >=3.0 && <4
@@ -63,3 +68,4 @@ default-extensions:
 - QuasiQuotes
 - OverloadedStrings
 - OverloadedLists
+- BlockArguments
