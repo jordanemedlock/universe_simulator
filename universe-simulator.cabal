@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 763afdbf6d039edea8ebb5ce89c0f9e65a03d9ac78a801a870a9fae342ce6919
+-- hash: f3499e9531e17f98f32ee6b67599d5e584c9742ce22211c49ad11a018fbcae33
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -28,11 +28,15 @@ source-repository head
 library
   exposed-modules:
       Shader
+      Vector
+      Utils
+      Window
   other-modules:
       Paths_universe_simulator
   hs-source-dirs:
       engine
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -46,6 +50,7 @@ library
     , matrix >=0.3 && <0.4
     , raw-strings-qq
     , time
+    , transformers
   default-language: Haskell2010
 
 executable blank-window
@@ -54,7 +59,8 @@ executable blank-window
       Paths_universe_simulator
   hs-source-dirs:
       examples/blank-window
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -68,6 +74,7 @@ executable blank-window
     , matrix >=0.3 && <0.4
     , raw-strings-qq
     , time
+    , transformers
   default-language: Haskell2010
 
 executable box
@@ -76,8 +83,8 @@ executable box
       Paths_universe_simulator
   hs-source-dirs:
       examples/box
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -91,5 +98,6 @@ executable box
     , matrix >=0.3 && <0.4
     , raw-strings-qq
     , time
+    , transformers
     , universe-simulator
   default-language: Haskell2010
