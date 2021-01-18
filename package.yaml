@@ -57,10 +57,14 @@ executables:
     main: Main.hs
     dependencies:
     - universe-simulator
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+    
+ghc-options:
+- -threaded
+- -rtsopts
+- -with-rtsopts=-N
+- -Wall
+- -Wunused-binds
+- -Wunused-imports
 # tests:
 
 

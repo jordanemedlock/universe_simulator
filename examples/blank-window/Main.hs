@@ -4,16 +4,20 @@ module Main where
 import qualified Graphics.UI.GLFW as GLFW
 import qualified Graphics.Rendering.OpenGL as GL
 import Graphics.Rendering.OpenGL (($=))
-import Data.Time (getCurrentTime, diffUTCTime, NominalDiffTime)
 
+windowSize :: (Int, Int)
 windowSize = (1920, 1080)
+
+windowTitle :: String
 windowTitle = "Triangle example"
 
+errorCallback :: Show a => a -> [Char] -> IO ()
 errorCallback err msg = do
     putStrLn "GLFW Error Occurred: "
     print err 
     putStrLn $ "with message: " ++ msg
 
+debugCallback :: Show a => a -> IO ()
 debugCallback msg = do
     putStr "GL Error Occurred: "
     print msg
@@ -45,7 +49,6 @@ main = do
                     GL.debugOutput $= GL.Enabled
                     GL.debugMessageCallback $= Just debugCallback
         
-                    (width, height) <- GLFW.getFramebufferSize window
                     GL.viewport $= (GL.Position 0 0, GL.Size (fromIntegral width) (fromIntegral height))
         
                     GL.blend $= GL.Enabled
@@ -57,22 +60,16 @@ main = do
         
                     return window
 
-            startTime <- getCurrentTime
-
-            state <- mainLoop window startTime
+            mainLoop window
 
             GLFW.terminate
 
-
-mainLoop window previousTime = do
+mainLoop :: GLFW.Window -> IO ()
+mainLoop window = do
     GLFW.pollEvents
 
     GL.clearColor $= GL.Color4 0 0 0 1
     GL.clear [GL.ColorBuffer, GL.DepthBuffer]
-
-    thisTime <- getCurrentTime
-    let deltaTime = diffUTCTime thisTime previousTime
-    let dt = (realToFrac deltaTime :: Double)
 
     -- render
 
@@ -80,4 +77,4 @@ mainLoop window previousTime = do
     shouldClose <- GLFW.windowShouldClose window
     if shouldClose 
         then return ()
-        else mainLoop window thisTime
+        else mainLoop window

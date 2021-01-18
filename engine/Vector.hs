@@ -6,10 +6,7 @@ module Vector
 
 import qualified Data.Matrix as M
 import Graphics.Rendering.OpenGL hiding (lookAt, perspective)
-import Foreign.Marshal.Array (newArray)
-import Foreign.Ptr
-import Foreign.Storable
-import Linear
+import qualified Linear as L
 import Data.Foldable
 
 -- | Create an OpenGL matrix from the Matrix
@@ -46,13 +43,13 @@ scaleMatrix = toGLMatrix . scaleMat
 
 perspectiveMatrix :: (Floating a, MatrixComponent a) => a -> a -> a -> a -> IO (GLmatrix a)
 perspectiveMatrix fov ratio near far = do
-    let persMat = perspective fov ratio near far
+    let persMat = L.perspective fov ratio near far
     let persL = foldr (\i a -> toList i <> a) [] persMat
     newMatrix RowMajor persL
 
-lookAtMatrix :: (Epsilon a, Floating a, MatrixComponent a) => Vector3 a -> Vector3 a -> Vector3 a -> IO (GLmatrix a)
+lookAtMatrix :: (L.Epsilon a, Floating a, MatrixComponent a) => Vector3 a -> Vector3 a -> Vector3 a -> IO (GLmatrix a)
 lookAtMatrix (Vector3 ex ey ez) (Vector3 cx cy cz) (Vector3 ux uy uz) = do
-    let persMat = lookAt (V3 ex ey ez) (V3 cx cy cz) (V3 ux uy uz)
+    let persMat = L.lookAt (L.V3 ex ey ez) (L.V3 cx cy cz) (L.V3 ux uy uz)
     let persL = foldr (\i a -> toList i <> a) [] persMat
     newMatrix RowMajor persL
 

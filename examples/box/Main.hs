@@ -3,19 +3,17 @@ module Main where
 
 import qualified Graphics.UI.GLFW as GLFW
 import qualified Graphics.Rendering.OpenGL as GL
-import qualified Data.Matrix as M
 import Graphics.Rendering.OpenGL (($=))
 import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
-import Data.Time (getCurrentTime, diffUTCTime, NominalDiffTime)
+import Data.Time (getCurrentTime, diffUTCTime, UTCTime)
 import Shader
 import Text.RawString.QQ
-import Data.Foldable
 import Vector
-import Utils
 import Control.Monad.IO.Class
 import Window
+import Data.ByteString (ByteString)
 
 
 data GameState = GameState 
@@ -23,6 +21,7 @@ data GameState = GameState
     , cube :: GL.VertexArrayObject
     }
 
+vert :: ByteString
 vert = [r|
 #version 330 core
 layout (location = 0) in vec3 position;
@@ -45,6 +44,7 @@ void main()
 }
 |]
 
+frag :: ByteString
 frag = [r|
 #version 330 core
 
@@ -164,16 +164,16 @@ main = do
 
     withShader program $ "projection" $== projection
 
-    cube <- createCube
+    cubeVAO <- createCube
 
     startTime <- getCurrentTime
 
-    state <- mainLoop window startTime (GameState program cube)
+    mainLoop window startTime (GameState program cubeVAO)
 
     GLFW.terminate
 
-
-mainLoop window previousTime (GameState program cube) = do
+mainLoop :: GLFW.Window -> UTCTime -> GameState -> IO ()
+mainLoop window previousTime (GameState program cubeVAO) = do
     GLFW.pollEvents
 
     GL.clearColor $= GL.Color4 0 0 0 1
@@ -197,12 +197,12 @@ mainLoop window previousTime (GameState program cube) = do
         "lightPos"      $== (GL.Vector3 1.1 1.0 2.0 :: GL.Vector3 Float)
         "lightColor"    $== (GL.Color4 1.0 1.0 1.0 1.0 :: GL.Color4 Float)
 
-        withVAO cube $ liftIO $ GL.drawArrays GL.Triangles 0 36 -- size of the cube array
+        withVAO cubeVAO $ liftIO $ GL.drawArrays GL.Triangles 0 36 -- size of the cube array
         
 
     GLFW.swapBuffers window
     shouldClose <- GLFW.windowShouldClose window
     if shouldClose 
         then return ()
-        else mainLoop window thisTime (GameState program cube)
+        else mainLoop window thisTime (GameState program cubeVAO)
 

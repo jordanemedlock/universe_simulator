@@ -5,7 +5,6 @@ module Shader where
 import qualified Graphics.Rendering.OpenGL as GL
 import Graphics.Rendering.OpenGL (($=))
 import qualified Data.ByteString as BS
-import System.FilePath.Posix (takeExtensions)
 import Control.Monad.Trans.Reader
 import Control.Monad.IO.Class
 
@@ -84,12 +83,11 @@ withShader prog f = do
     liftIO $ GL.currentProgram $= Nothing
     return value
 
-($==) :: (GL.Uniform a, MonadIO m) => String -> a -> ShaderMonad m a
+($==) :: (GL.Uniform a, MonadIO m) => String -> a -> ShaderMonad m ()
 name $== value = do
     prog <- ask
     location <- liftIO $ GL.uniformLocation prog name
     liftIO $ GL.uniform location $= value
-    return value
 
 
 withVAO :: MonadIO m => GL.VertexArrayObject -> VAOMonad m a -> m a

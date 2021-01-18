@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f69ffdd16f726bd3ccb450c3c490742c8cd64c270fa7b8b6848afeb431a20d58
+-- hash: f3499e9531e17f98f32ee6b67599d5e584c9742ce22211c49ad11a018fbcae33
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -36,6 +36,7 @@ library
   hs-source-dirs:
       engine
   default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -59,6 +60,7 @@ executable blank-window
   hs-source-dirs:
       examples/blank-window
   default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -82,7 +84,7 @@ executable box
   hs-source-dirs:
       examples/box
   default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
