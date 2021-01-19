@@ -5,11 +5,13 @@ import qualified Graphics.Rendering.OpenGL as GL
 import Graphics.Rendering.OpenGL (($=))
 import Control.Monad.IO.Class
 
+errorCallback :: Show a => a -> [Char] -> IO ()
 errorCallback err msg = do
     putStrLn "GLFW Error Occurred: "
     print err 
     putStrLn $ "with message: " ++ msg
 
+debugCallback :: Show a => a -> IO ()
 debugCallback msg = do
     putStr "GL Error Occurred: "
     print msg
@@ -41,7 +43,6 @@ initWindow size@(GL.Size width height) title = liftIO do
                     GL.debugOutput $= GL.Enabled
                     GL.debugMessageCallback $= Just debugCallback
         
-                    (width, height) <- GLFW.getFramebufferSize window
                     GL.viewport $= (GL.Position 0 0, size)
         
                     GL.blend $= GL.Enabled

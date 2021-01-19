@@ -32,6 +32,7 @@ dependencies:
 - linear
 - raw-strings-qq
 - time 
+- vector
 - transformers
 
 library:
@@ -41,6 +42,7 @@ library:
   - Vector
   - Utils
   - Window
+  - Texture
   # dependencies:
   # - GLFW-b >=3.3 && <4
   # - OpenGL >=3.0 && <4
@@ -54,6 +56,11 @@ executables:
     main: Main.hs
   box:
     source-dirs: examples/box
+    main: Main.hs
+    dependencies:
+    - universe-simulator
+  textured-box:
+    source-dirs: examples/textured-box
     main: Main.hs
     dependencies:
     - universe-simulator
