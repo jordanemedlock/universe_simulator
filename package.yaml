@@ -64,6 +64,11 @@ executables:
     main: Main.hs
     dependencies:
     - universe-simulator
+  earth-sphere:
+    source-dirs: examples/earth-sphere
+    main: Main.hs
+    dependencies:
+    - universe-simulator
     
 ghc-options:
 - -threaded
