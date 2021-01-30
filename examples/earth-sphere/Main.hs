@@ -16,6 +16,8 @@ import Window
 import Data.ByteString (ByteString)
 import Texture
 import GHC.Word
+import Linear
+import Types
 
 
 data GameState = GameState 
@@ -279,7 +281,7 @@ createPlane = do
 
 main :: IO ()
 main = do
-    window <- initWindow (GL.Size 1920 1080) "Box example"
+    window <- initWindow (V2 1920 1080) "Box example"
 
     -- GL.polygonMode $= (GL.Line, GL.Line)
 
@@ -315,21 +317,21 @@ mainLoop window previousTime (GameState program cubeVAO tex numTris) = do
     let deltaTime = diffUTCTime thisTime previousTime
     let dt = (realToFrac deltaTime :: Double)
 
-    model <- eye4 :: IO (GL.GLmatrix Float)
+    let model = identity :: M44 Float
 
-    let pos = GL.Vector3 (2) (2) (2) :: GL.Vector3 Float
+    let pos = V3 (2) (2) (2) :: V3 Float
     
-    view <- lookAtMatrix pos (GL.Vector3 0 0 0) (GL.Vector3 0 1 0) :: IO (GL.GLmatrix Float)
+    let view = lookAt pos (V3 0 0 0) (V3 0 1 0) :: M44 Float
 
     withShader program do
         "model"         $== model
         "view"          $== view
 
-        "objectColor"   $== (GL.Color4 1.0 0.5 0.3 1.0 :: GL.Color4 Float)
-        "ambientColor"  $== (GL.Color4 1.0 1.0 1.0 1.0 :: GL.Color4 Float)
+        "objectColor"   $== (color 1.0 0.5 0.3 1.0)
+        "ambientColor"  $== (color 1.0 1.0 1.0 1.0)
         "viewPos"       $== pos
-        "lightPos"      $== (GL.Vector3 1.1 1.0 2.0 :: GL.Vector3 Float)
-        "lightColor"    $== (GL.Color4 1.0 1.0 1.0 1.0 :: GL.Color4 Float)
+        "lightPos"      $== (V3 1.1 1.0 2.0 :: V3 Float)
+        "lightColor"    $== (color 1.0 1.0 1.0 1.0)
 
 
         liftIO $ GL.activeTexture $= GL.TextureUnit 0

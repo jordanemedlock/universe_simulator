@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d4c5b4073bd38bdfafeeb9fa6e8aa7177f5b5b2201bc9ac87306473bfa3294b2
+-- hash: 5d60200b4127927bfba9b4ba55f1529221b91bd0800df1c1c9fd6d4b85bd796b
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -32,11 +32,12 @@ library
       Utils
       Window
       Texture
+      Types
   other-modules:
       Paths_universe_simulator
   hs-source-dirs:
       engine
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
       GLFW-b >=3.3 && <4
@@ -61,7 +62,7 @@ executable blank-window
       Paths_universe_simulator
   hs-source-dirs:
       examples/blank-window
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
       GLFW-b >=3.3 && <4
@@ -86,7 +87,7 @@ executable box
       Paths_universe_simulator
   hs-source-dirs:
       examples/box
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
       GLFW-b >=3.3 && <4
@@ -112,7 +113,7 @@ executable earth-sphere
       Paths_universe_simulator
   hs-source-dirs:
       examples/earth-sphere
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
       GLFW-b >=3.3 && <4
@@ -138,7 +139,7 @@ executable textured-box
       Paths_universe_simulator
   hs-source-dirs:
       examples/textured-box
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
       GLFW-b >=3.3 && <4

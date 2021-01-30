@@ -43,6 +43,7 @@ library:
   - Utils
   - Window
   - Texture
+  - Types
   # dependencies:
   # - GLFW-b >=3.3 && <4
   # - OpenGL >=3.0 && <4
@@ -85,3 +86,5 @@ default-extensions:
 - OverloadedStrings
 - OverloadedLists
 - BlockArguments
+- FlexibleInstances
+- ScopedTypeVariables

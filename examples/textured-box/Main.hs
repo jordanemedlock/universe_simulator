@@ -15,6 +15,7 @@ import Control.Monad.IO.Class
 import Window
 import Data.ByteString (ByteString)
 import Texture
+import Linear
 
 
 data GameState = GameState 
@@ -163,7 +164,7 @@ createCube = do
 
 main :: IO ()
 main = do
-    window <- initWindow (GL.Size 1920 1080) "Box example"
+    window <- initWindow (V2 1920 1080) "Box example"
 
     Just program <- compileShader vert frag Nothing 
 
