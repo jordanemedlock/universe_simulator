@@ -43,6 +43,7 @@ library:
   - Utils
   - Window
   - Texture
+  - Types
   # dependencies:
   # - GLFW-b >=3.3 && <4
   # - OpenGL >=3.0 && <4
@@ -64,6 +65,11 @@ executables:
     main: Main.hs
     dependencies:
     - universe-simulator
+  earth-sphere:
+    source-dirs: examples/earth-sphere
+    main: Main.hs
+    dependencies:
+    - universe-simulator
     
 ghc-options:
 - -threaded
@@ -80,3 +86,5 @@ default-extensions:
 - OverloadedStrings
 - OverloadedLists
 - BlockArguments
+- FlexibleInstances
+- ScopedTypeVariables

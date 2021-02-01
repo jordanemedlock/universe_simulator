@@ -4,6 +4,7 @@ import qualified Graphics.UI.GLFW as GLFW
 import qualified Graphics.Rendering.OpenGL as GL
 import Graphics.Rendering.OpenGL (($=))
 import Control.Monad.IO.Class
+import Linear
 
 errorCallback :: Show a => a -> [Char] -> IO ()
 errorCallback err msg = do
@@ -16,8 +17,8 @@ debugCallback msg = do
     putStr "GL Error Occurred: "
     print msg
 
-initWindow :: MonadIO m => GL.Size -> String -> m GLFW.Window
-initWindow size@(GL.Size width height) title = liftIO do
+initWindow :: MonadIO m => V2 Int -> String -> m GLFW.Window
+initWindow (V2 width height) title = liftIO do
     GLFW.setErrorCallback $ Just errorCallback
 
     initialized <- GLFW.init
@@ -43,7 +44,7 @@ initWindow size@(GL.Size width height) title = liftIO do
                     GL.debugOutput $= GL.Enabled
                     GL.debugMessageCallback $= Just debugCallback
         
-                    GL.viewport $= (GL.Position 0 0, size)
+                    GL.viewport $= (GL.Position 0 0, GL.Size (fromIntegral width) (fromIntegral height))
         
                     GL.blend $= GL.Enabled
                     GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
