@@ -13,15 +13,14 @@ import Text.RawString.QQ
 import Control.Monad.IO.Class
 import Data.ByteString (ByteString)
 import GHC.Word
-import Linear
+import Types
+import Control.Lens hiding (transform)
+import Control.Monad.Trans.Reader
+import Linear hiding (vector)
+import Data.IORef
 
 
-data GameState = GameState 
-    { shader :: GL.Program
-    , cube :: GL.VertexArrayObject
-    , texture :: GL.TextureObject
-    , meshTris :: GL.GLsizeiptr
-    }
+
 
 vert :: ByteString
 vert = [r|
@@ -91,8 +90,8 @@ void main()
     vec4 specular = specularStrength * spec * lightColor;
 
     // result
-    // vec4 result = (ambient + diffuse + specular) * texture(objectTexture, TexCoord);
-    vec4 result = texture(objectTexture, TexCoord);
+    vec4 result = (ambient + diffuse + specular) * texture(objectTexture, TexCoord);
+    // vec4 result = texture(objectTexture, TexCoord);
     FragColor = result;
 }
 |]
@@ -130,7 +129,7 @@ fullSphereVertexList n = concat [ [ x, y, z, x, y, z, u, v ]
                                 | (i, (x, y, z)) <- zip [0..] $ sphereVertexList n
                                 , let (iv, iu) = i `divMod` (n*2)
                                 , let fn = fromIntegral n
-                                , let (u, v) = (fromIntegral iu / fn, fromIntegral iv / fn)
+                                , let (u, v) = (fromIntegral iu / fn / 2, fromIntegral iv / fn)
                                 ]
 
 createCube :: IO GL.VertexArrayObject
@@ -275,14 +274,46 @@ createPlane = do
     return (vao, indicesSize `div` 3)
 
 
+initAssets = do
+    Just program <- compileShader vert frag Nothing 
+
+
+    (sphereVAO, numTris) <- createSphere
+
+    (tex, _) <- loadTexture "resources/8k_earth_daymap.png"
+
+    return $ Assets program (EarthAssets sphereVAO numTris tex)
+
+initState = do
+    startTime <- getCurrentTime
+
+    let cameraTransform = Transform (EulerRotation $ V3 0 0 0) $ V3 2 2 2
+    let cameraState = Camera cameraTransform 70 (16.0/9.0) 0.1 100.0
+
+    let earthState = Earth $ Transform (EulerRotation $ V3 (-90) 0 0) $ V3 0 0 0
+
+    return $ GameState cameraState earthState startTime
+
+projection :: Camera -> M44 Float
+projection cam = perspective (cam^.fov) (cam^.ratio) (cam^.near) (cam^.far)
+
+mkRotationMat :: Rotation Float -> M33 Float
+mkRotationMat (QuaternionRotation quat) = fromQuaternion quat
+mkRotationMat (EulerRotation (V3 x y z)) = fromQuaternion $ qx * qy * qz
+    where
+        qx = axisAngle (V3 1 0 0) (degToRad x)
+        qy = axisAngle (V3 0 1 0) (degToRad y)
+        qz = axisAngle (V3 0 0 1) (degToRad z)
+
+degToRad :: Float -> Float 
+degToRad = (*pi).(/180)
+
 main :: IO ()
 main = do
     window <- initWindow (V2 1920 1080) "Box example"
 
     -- GL.polygonMode $= (GL.Line, GL.Line)
-
-    Just program <- compileShader vert frag Nothing 
-
+    
     let fov = 45 :: Float
     let ratio = 1920 / 1080.0
     let near = 0.1
@@ -290,38 +321,48 @@ main = do
 
     projection <- perspectiveMatrix fov ratio near far
 
-    withShader program $ "projection" $== projection
+    assets <- initAssets
+    state <- newIORef =<< initState 
 
-    (cubeVAO, numTris) <- createSphere
+    let game = Game window assets state
 
-    (tex, _) <- loadTexture "resources/8k_earth_daymap.png"
-
-    startTime <- getCurrentTime
-
-    mainLoop window startTime (GameState program cubeVAO tex numTris)
+    runReaderT mainLoop game
 
     GLFW.terminate
 
-mainLoop :: GLFW.Window -> UTCTime -> GameState -> IO ()
-mainLoop window previousTime (GameState program cubeVAO tex numTris) = do
-    GLFW.pollEvents
+mainLoop :: ReaderT Game IO ()
+mainLoop = do
+    game <- ask
+    state <- liftIO $ readIORef $ game^.gameState
+    let earthA = game^.assets^.earth
+    let earthT = state^.earth^.transform
 
-    GL.clearColor $= GL.Color4 0 0 0 1
-    GL.clear [GL.ColorBuffer, GL.DepthBuffer]
+    thisTime <- liftIO do
+        GLFW.pollEvents
 
-    thisTime <- getCurrentTime
-    let deltaTime = diffUTCTime thisTime previousTime
+        GL.clearColor $= GL.Color4 0 0 0 1
+        GL.clear [GL.ColorBuffer, GL.DepthBuffer]
+
+        getCurrentTime
+    let deltaTime = diffUTCTime thisTime (state^.lastTime)
     let dt = (realToFrac deltaTime :: Double)
+    let speed = 30
 
-    let model = identity :: M44 Float
+    liftIO do
+        modifyIORef (game^.gameState) $ (earth.transform.rotation.vector._z) %~ (+(realToFrac $ dt*speed)) 
+        modifyIORef (game^.gameState) $ (lastTime) .~ thisTime
+        
+
+    let model = mkTransformationMat (mkRotationMat $ earthT^.rotation) $ earthT^.position
 
     let pos = V3 (2) (2) (2) :: V3 Float
     
     let view = lookAt pos (V3 0 0 0) (V3 0 1 0) :: M44 Float
 
-    withShader program do
+    withShader (game^.assets^.shader) do
         "model"         $== model
         "view"          $== view
+        "projection"    $== projection (state^.camera)
 
         "objectColor"   $== (color 1.0 0.5 0.3 1.0)
         "ambientColor"  $== (color 1.0 1.0 1.0 1.0)
@@ -331,14 +372,16 @@ mainLoop window previousTime (GameState program cubeVAO tex numTris) = do
 
 
         liftIO $ GL.activeTexture $= GL.TextureUnit 0
-        liftIO $ GL.textureBinding GL.Texture2D $= Just tex
+        liftIO $ GL.textureBinding GL.Texture2D $= Just (earthA^.texture)
 
-        withVAO cubeVAO $ liftIO $ GL.drawElements GL.Triangles (fromIntegral numTris) GL.UnsignedInt nullPtr -- size of the cube array
+        withVAO (earthA^.object) $ liftIO $ GL.drawElements GL.Triangles (fromIntegral (earthA^.numTris)) GL.UnsignedInt nullPtr -- size of the cube array
         
-
-    GLFW.swapBuffers window
-    shouldClose <- GLFW.windowShouldClose window
+    
+    shouldClose <- liftIO do
+    
+        GLFW.swapBuffers (game^.window)
+        GLFW.windowShouldClose (game^.window)
     if shouldClose 
         then return ()
-        else mainLoop window thisTime (GameState program cubeVAO tex numTris)
+        else mainLoop
 
