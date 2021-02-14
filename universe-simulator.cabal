@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5308073942c6e9462b538498c2b01b50e58c049f4101131b3bb2be7385b3eab7
+-- hash: f0005025b4a49c352a01ab8d5dc029806dbbc22bb2c896ef8a3680e609024b4d
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -54,6 +54,7 @@ library
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
+    , text
     , time
     , transformers
     , vector
@@ -81,6 +82,7 @@ executable blank-window
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
+    , text
     , time
     , transformers
     , vector
@@ -108,6 +110,7 @@ executable box
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
+    , text
     , time
     , transformers
     , universe-simulator
@@ -137,6 +140,7 @@ executable camera-movement
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
+    , text
     , time
     , transformers
     , universe-simulator
@@ -165,6 +169,7 @@ executable earth-sphere
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
+    , text
     , time
     , transformers
     , universe-simulator
@@ -194,6 +199,7 @@ executable model-loading
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
+    , text
     , time
     , transformers
     , universe-simulator
@@ -222,6 +228,7 @@ executable textured-box
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
+    , text
     , time
     , transformers
     , universe-simulator

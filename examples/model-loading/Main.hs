@@ -18,7 +18,8 @@ import Control.Lens hiding (transform)
 import Control.Monad.Trans.Reader
 import Linear hiding (vector)
 import Data.IORef
-import Graphics.WaveFront (model)
+import qualified Graphics.WaveFront as WF
+import Data.Text (Text)
 
 
 
@@ -103,13 +104,22 @@ initAssets = do
     Just program <- compileShader vert frag Nothing 
 
 
-    (sphereVAO, numTris) <- createSphere
+    sphereVAO <- GL.genObjectName
+    let numTris = 0
 
     (tex, _) <- loadTexture "resources/8k_earth_daymap.png"
 
-    emodel <- Load.model "resources/cube/cube.obj"
+    Right model <- WF.model "resources/cube/cube.obj" :: IO (Either String (WF.Model Float Text Int []))
 
-    print emodel
+    verts <- newArray (model ^. WF.vertices :: [V3 Float])
+    norms <- newArray (model ^. WF.normals)
+    texCoords <- newArray (model ^. WF.texCoords)
+    faces <- newArray $ view WF.iVertex <$> (model ^. WF.faces.WF.indices) :: IO (Ptr Int)
+    let materials = model ^. WF.materials 
+
+    -- print emodel
+    
+    error "stop here"
 
     return $ Assets program (EarthAssets sphereVAO numTris tex)
 

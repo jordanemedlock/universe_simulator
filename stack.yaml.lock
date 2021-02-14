@@ -3,29 +3,7 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages:
-- completed:
-    name: Cartesian
-    version: 0.6.0.0
-    git: https://github.com/jordanemedlock/Cartesian.git
-    pantry-tree:
-      size: 1211
-      sha256: c671067768bc0ce31c05dcc6a89ed11d528b31807709c6feb817f31803ef3664
-    commit: ed05b53a14f9a7f9ebb21b7cd9affae3d95af3f6
-  original:
-    git: https://github.com/jordanemedlock/Cartesian.git
-    commit: ed05b53a14f9a7f9ebb21b7cd9affae3d95af3f6
-- completed:
-    name: WaveFront
-    version: 0.1.0.0
-    git: https://github.com/jordanemedlock/3DWaves.git
-    pantry-tree:
-      size: 1309
-      sha256: 2e8a5fb0581bfbc0ef226adca17436331e8df4bdfab978e35520025ae3de323b
-    commit: 672bb568fbc078152762f9ab01db508ea9bbe6d0
-  original:
-    git: https://github.com/jordanemedlock/3DWaves.git
-    commit: 672bb568fbc078152762f9ab01db508ea9bbe6d0
+packages: []
 snapshots:
 - completed:
     size: 533252
