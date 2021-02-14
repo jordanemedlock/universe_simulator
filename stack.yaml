@@ -34,10 +34,12 @@ packages:
 # These entries can reference officially published versions as well as
 # forks / in-progress versions pinned to a git hash. For example:
 #
-# extra-deps:
+extra-deps:
 # - acme-missiles-0.3
-# - git: https://github.com/commercialhaskell/stack.git
-#   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
+- git: https://github.com/jordanemedlock/Cartesian.git
+  commit: ed05b53a14f9a7f9ebb21b7cd9affae3d95af3f6
+- git: https://github.com/jordanemedlock/3DWaves.git
+  commit: 672bb568fbc078152762f9ab01db508ea9bbe6d0
 #
 # extra-deps: []
 
