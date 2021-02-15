@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5d60200b4127927bfba9b4ba55f1529221b91bd0800df1c1c9fd6d4b85bd796b
+-- hash: 605278514a0433d9614c931cd63dfdf1580bee3710a63a502e20469c5df4a113
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -48,6 +48,7 @@ library
     , bytestring >=0.10 && <1
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
+    , gltf-codec
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -73,6 +74,7 @@ executable blank-window
     , bytestring >=0.10 && <1
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
+    , gltf-codec
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -98,6 +100,7 @@ executable box
     , bytestring >=0.10 && <1
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
+    , gltf-codec
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -124,6 +127,7 @@ executable earth-sphere
     , bytestring >=0.10 && <1
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
+    , gltf-codec
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -150,6 +154,7 @@ executable textured-box
     , bytestring >=0.10 && <1
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
+    , gltf-codec
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
