@@ -1,4 +1,4 @@
-module Types where
+module Engine.Types where
 
 import Linear
 import Graphics.Rendering.OpenGL hiding (Color)

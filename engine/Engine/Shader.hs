@@ -1,5 +1,5 @@
 
-module Shader where
+module Engine.Shader where
 
 
 import qualified Graphics.Rendering.OpenGL as GL

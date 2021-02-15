@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5d60200b4127927bfba9b4ba55f1529221b91bd0800df1c1c9fd6d4b85bd796b
+-- hash: ac23f69b0516c65a9b4f1aac1d492db97b0d0ef17e905638cdff61da5809870f
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -27,18 +27,19 @@ source-repository head
 
 library
   exposed-modules:
-      Shader
-      Vector
-      Utils
-      Window
-      Texture
-      Types
+      Engine
   other-modules:
+      Engine.Shader
+      Engine.Texture
+      Engine.Types
+      Engine.Utils
+      Engine.Vector
+      Engine.Window
       Paths_universe_simulator
   hs-source-dirs:
       engine
   default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports -ddump-splices
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -48,6 +49,7 @@ library
     , bytestring >=0.10 && <1
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
+    , lens
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -63,7 +65,7 @@ executable blank-window
   hs-source-dirs:
       examples/blank-window
   default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports -ddump-splices
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -73,6 +75,7 @@ executable blank-window
     , bytestring >=0.10 && <1
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
+    , lens
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -88,7 +91,7 @@ executable box
   hs-source-dirs:
       examples/box
   default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports -ddump-splices
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -98,6 +101,35 @@ executable box
     , bytestring >=0.10 && <1
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
+    , lens
+    , linear
+    , matrix >=0.3 && <0.4
+    , raw-strings-qq
+    , time
+    , transformers
+    , universe-simulator
+    , vector
+  default-language: Haskell2010
+
+executable camera-movement
+  main-is: Main.hs
+  other-modules:
+      Types
+      Paths_universe_simulator
+  hs-source-dirs:
+      examples/camera-movement
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports -ddump-splices
+  build-depends:
+      GLFW-b >=3.3 && <4
+    , JuicyPixels >=3.3 && <4
+    , OpenGL >=3.0 && <4
+    , base >=4.7 && <5
+    , bindings-GLFW >=3.3 && <4
+    , bytestring >=0.10 && <1
+    , filepath >=1.4 && <2
+    , freetype2 >=0.2 && <0.3
+    , lens
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -114,7 +146,7 @@ executable earth-sphere
   hs-source-dirs:
       examples/earth-sphere
   default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports -ddump-splices
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -124,6 +156,7 @@ executable earth-sphere
     , bytestring >=0.10 && <1
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
+    , lens
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -140,7 +173,7 @@ executable textured-box
   hs-source-dirs:
       examples/textured-box
   default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports -ddump-splices
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -150,6 +183,7 @@ executable textured-box
     , bytestring >=0.10 && <1
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
+    , lens
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq

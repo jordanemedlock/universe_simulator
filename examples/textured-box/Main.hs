@@ -8,13 +8,10 @@ import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
 import Data.Time (getCurrentTime, diffUTCTime, UTCTime)
-import Shader
+import Engine
 import Text.RawString.QQ
-import Vector
 import Control.Monad.IO.Class
-import Window
 import Data.ByteString (ByteString)
-import Texture
 import Linear
 
 
