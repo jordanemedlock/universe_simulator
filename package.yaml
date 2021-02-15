@@ -35,16 +35,12 @@ dependencies:
 - vector
 - transformers
 - gltf-codec
+- lens
 
 library:
   source-dirs: engine
   exposed-modules: 
-  - Shader
-  - Vector
-  - Utils
-  - Window
-  - Texture
-  - Types
+  - Engine
   # dependencies:
   # - GLFW-b >=3.3 && <4
   # - OpenGL >=3.0 && <4
@@ -71,6 +67,11 @@ executables:
     main: Main.hs
     dependencies:
     - universe-simulator
+  camera-movement:
+    source-dirs: examples/camera-movement
+    main: Main.hs
+    dependencies:
+    - universe-simulator
     
 ghc-options:
 - -threaded
@@ -79,6 +80,7 @@ ghc-options:
 - -Wall
 - -Wunused-binds
 - -Wunused-imports
+- -ddump-splices
 # tests:
 
 

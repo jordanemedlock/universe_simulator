@@ -27,18 +27,19 @@ source-repository head
 
 library
   exposed-modules:
-      Shader
-      Vector
-      Utils
-      Window
-      Texture
-      Types
+      Engine
   other-modules:
+      Engine.Shader
+      Engine.Texture
+      Engine.Types
+      Engine.Utils
+      Engine.Vector
+      Engine.Window
       Paths_universe_simulator
   hs-source-dirs:
       engine
   default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports -ddump-splices
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -49,6 +50,7 @@ library
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
     , gltf-codec
+    , lens
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -64,7 +66,7 @@ executable blank-window
   hs-source-dirs:
       examples/blank-window
   default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports -ddump-splices
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -75,6 +77,7 @@ executable blank-window
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
     , gltf-codec
+    , lens
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -90,7 +93,35 @@ executable box
   hs-source-dirs:
       examples/box
   default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports -ddump-splices
+  build-depends:
+      GLFW-b >=3.3 && <4
+    , JuicyPixels >=3.3 && <4
+    , OpenGL >=3.0 && <4
+    , base >=4.7 && <5
+    , bindings-GLFW >=3.3 && <4
+    , bytestring >=0.10 && <1
+    , filepath >=1.4 && <2
+    , freetype2 >=0.2 && <0.3
+    , lens
+    , linear
+    , matrix >=0.3 && <0.4
+    , raw-strings-qq
+    , time
+    , transformers
+    , universe-simulator
+    , vector
+  default-language: Haskell2010
+
+executable camera-movement
+  main-is: Main.hs
+  other-modules:
+      Types
+      Paths_universe_simulator
+  hs-source-dirs:
+      examples/camera-movement
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports -ddump-splices
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -101,6 +132,7 @@ executable box
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
     , gltf-codec
+    , lens
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -117,7 +149,7 @@ executable earth-sphere
   hs-source-dirs:
       examples/earth-sphere
   default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports -ddump-splices
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -128,6 +160,7 @@ executable earth-sphere
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
     , gltf-codec
+    , lens
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -144,7 +177,7 @@ executable textured-box
   hs-source-dirs:
       examples/textured-box
   default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports -ddump-splices
   build-depends:
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
@@ -155,6 +188,7 @@ executable textured-box
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
     , gltf-codec
+    , lens
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq

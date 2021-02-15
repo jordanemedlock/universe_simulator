@@ -1,4 +1,4 @@
-module Texture where
+module Engine.Texture where
 
 
 import qualified Graphics.Rendering.OpenGL as GL

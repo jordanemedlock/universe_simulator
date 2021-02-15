@@ -1,4 +1,4 @@
-module Vector
+module Engine.Vector
 ( translationMatrix, scaleMatrix, perspectiveMatrix, lookAtMatrix, eye4
 
 ) where

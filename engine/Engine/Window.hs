@@ -1,4 +1,4 @@
-module Window where
+module Engine.Window where
 
 import qualified Graphics.UI.GLFW as GLFW
 import qualified Graphics.Rendering.OpenGL as GL
