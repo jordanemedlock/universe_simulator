@@ -11,90 +11,25 @@ import Data.Time (getCurrentTime, diffUTCTime, UTCTime)
 import Engine
 import Text.RawString.QQ
 import Control.Monad.IO.Class
-import Data.ByteString (ByteString)
+import qualified Data.ByteString as BS
 import GHC.Word
 import Types
 import Control.Lens hiding (transform)
 import Control.Monad.Trans.Reader
+import Control.Monad.Trans.Except
 import Linear hiding (vector)
 import Data.IORef
+import qualified Codec.GlTF as GLTF
+import qualified Codec.GlTF.Image as Image
+import qualified Codec.GlTF.URI as URI
+import qualified Codec.GlTF.Mesh as Mesh
+import Data.Either
+import qualified Data.Vector as V
+import qualified Data.Text as T
+import System.FilePath.Posix
+import qualified Data.HashMap.Strict as HM
 
 
-
-
-vert :: ByteString
-vert = [r|
-#version 330 core
-layout (location = 0) in vec3 position;
-layout (location = 1) in vec3 normal;
-layout (location = 2) in vec2 texCoords;
-
-out vec3 FragPos;
-out vec3 Normal;
-out vec2 TexCoord;
-
-uniform mat4 projection;
-uniform mat4 view; 
-// uniform vec2 screenSize;
-uniform mat4 model;
-
-void main()
-{
-    FragPos = vec3(model * vec4(position, 1.0));
-    Normal = mat3(transpose(inverse(model))) * normal;
-
-    gl_Position = projection * view * vec4(FragPos, 1.0);
-    TexCoord = texCoords;
-}
-|]
-
-frag :: ByteString
-frag = [r|
-#version 330 core
-
-in vec3 FragPos;
-in vec3 Normal;
-in vec2 TexCoord;
-
-out vec4 FragColor;
-
-uniform vec4 ambientColor;
-uniform vec4 objectColor;
-
-uniform vec3 viewPos;
-
-uniform vec3 lightPos;
-uniform vec4 lightColor;
-
-uniform sampler2D objectTexture;
-
-void main()
-{
-    // constants
-    float ambientStrength = 0.1;
-    float specularStrength = 0.5;
-
-    // diffuse
-    vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);  
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec4 diffuse = diff * lightColor;
-
-    // ambient
-    vec4 ambient = ambientStrength * ambientColor;
-
-    // specular
-    vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec4 specular = specularStrength * spec * lightColor;
-
-    // result
-    // vec4 result = (ambient + diffuse + specular) * texture(objectTexture, TexCoord);
-    vec4 result = texture(objectTexture, TexCoord);
-    FragColor = result;
-}
-|]
 
 planeVertexList :: Int -> Int -> [(Float, Float, Float)]
 planeVertexList rows cols = concat [ [ (fromIntegral r / fromIntegral (rows-1), fromIntegral c / fromIntegral (cols-1), 0.0) 
@@ -112,10 +47,6 @@ planeIndexList rows cols = concat $ concat  [ [ (if r == 0           then [] els
                                             | r <- [0..rows-2]
                                             ]
 
-fullPlaneVertexList :: Int -> Int -> [Float]
-fullPlaneVertexList rows cols = concat [ [ x, y, z, 0, 0, 1.0, y, x ]
-                                       | (x, y, z) <- planeVertexList rows cols
-                                       ]
 
 sphereVertexList :: Int -> [(Float,Float,Float)] -- list of rows of vertices
 sphereVertexList n = (\(x, y, z) -> (sin (pi*x) * cos (2*pi*y), sin (pi*x) * sin (2*pi*y), cos (pi*x))) <$> planeVertexList n (n*2)
@@ -131,70 +62,6 @@ fullSphereVertexList n = concat [ [ x, y, z, x, y, z, u, v ]
                                 , let fn = fromIntegral n
                                 , let (u, v) = (fromIntegral iu / fn / 2, fromIntegral iv / fn)
                                 ]
-
-createCube :: IO GL.VertexArrayObject
-createCube = do
-    
-    let verticesL = [ (-0.5), (-0.5), (-0.5),   ( 0.0), ( 0.0), (-1.0),     0.0, 0.0
-                    , ( 0.5), (-0.5), (-0.5),   ( 0.0), ( 0.0), (-1.0),     1.0, 0.0
-                    , ( 0.5), ( 0.5), (-0.5),   ( 0.0), ( 0.0), (-1.0),     1.0, 1.0
-                    , ( 0.5), ( 0.5), (-0.5),   ( 0.0), ( 0.0), (-1.0),     1.0, 1.0
-                    , (-0.5), ( 0.5), (-0.5),   ( 0.0), ( 0.0), (-1.0),     0.0, 1.0
-                    , (-0.5), (-0.5), (-0.5),   ( 0.0), ( 0.0), (-1.0),     0.0, 0.0
-
-                    , (-0.5), (-0.5), ( 0.5),   ( 0.0), ( 0.0), ( 1.0),     0.0, 0.0
-                    , ( 0.5), (-0.5), ( 0.5),   ( 0.0), ( 0.0), ( 1.0),     1.0, 0.0
-                    , ( 0.5), ( 0.5), ( 0.5),   ( 0.0), ( 0.0), ( 1.0),     1.0, 1.0
-                    , ( 0.5), ( 0.5), ( 0.5),   ( 0.0), ( 0.0), ( 1.0),     1.0, 1.0
-                    , (-0.5), ( 0.5), ( 0.5),   ( 0.0), ( 0.0), ( 1.0),     0.0, 1.0
-                    , (-0.5), (-0.5), ( 0.5),   ( 0.0), ( 0.0), ( 1.0),     0.0, 0.0
-
-                    , (-0.5), ( 0.5), ( 0.5),   (-1.0), ( 0.0), ( 0.0),     1.0, 1.0
-                    , (-0.5), ( 0.5), (-0.5),   (-1.0), ( 0.0), ( 0.0),     1.0, 0.0
-                    , (-0.5), (-0.5), (-0.5),   (-1.0), ( 0.0), ( 0.0),     0.0, 0.0
-                    , (-0.5), (-0.5), (-0.5),   (-1.0), ( 0.0), ( 0.0),     0.0, 0.0
-                    , (-0.5), (-0.5), ( 0.5),   (-1.0), ( 0.0), ( 0.0),     0.0, 1.0
-                    , (-0.5), ( 0.5), ( 0.5),   (-1.0), ( 0.0), ( 0.0),     1.0, 1.0
-
-                    , ( 0.5), ( 0.5), ( 0.5),   ( 1.0), ( 0.0), ( 0.0),     1.0, 1.0
-                    , ( 0.5), ( 0.5), (-0.5),   ( 1.0), ( 0.0), ( 0.0),     1.0, 0.0
-                    , ( 0.5), (-0.5), (-0.5),   ( 1.0), ( 0.0), ( 0.0),     0.0, 0.0
-                    , ( 0.5), (-0.5), (-0.5),   ( 1.0), ( 0.0), ( 0.0),     0.0, 0.0
-                    , ( 0.5), (-0.5), ( 0.5),   ( 1.0), ( 0.0), ( 0.0),     0.0, 1.0
-                    , ( 0.5), ( 0.5), ( 0.5),   ( 1.0), ( 0.0), ( 0.0),     1.0, 1.0
-
-                    , (-0.5), (-0.5), (-0.5),   ( 0.0), (-1.0), ( 0.0),     0.0, 0.0
-                    , ( 0.5), (-0.5), (-0.5),   ( 0.0), (-1.0), ( 0.0),     1.0, 0.0
-                    , ( 0.5), (-0.5), ( 0.5),   ( 0.0), (-1.0), ( 0.0),     1.0, 1.0
-                    , ( 0.5), (-0.5), ( 0.5),   ( 0.0), (-1.0), ( 0.0),     1.0, 1.0
-                    , (-0.5), (-0.5), ( 0.5),   ( 0.0), (-1.0), ( 0.0),     0.0, 1.0
-                    , (-0.5), (-0.5), (-0.5),   ( 0.0), (-1.0), ( 0.0),     0.0, 0.0
-
-                    , (-0.5), ( 0.5), (-0.5),   ( 0.0), ( 1.0), ( 0.0),     0.0, 0.0
-                    , ( 0.5), ( 0.5), (-0.5),   ( 0.0), ( 1.0), ( 0.0),     1.0, 0.0
-                    , ( 0.5), ( 0.5), ( 0.5),   ( 0.0), ( 1.0), ( 0.0),     1.0, 1.0
-                    , ( 0.5), ( 0.5), ( 0.5),   ( 0.0), ( 1.0), ( 0.0),     1.0, 1.0
-                    , (-0.5), ( 0.5), ( 0.5),   ( 0.0), ( 1.0), ( 0.0),     0.0, 1.0
-                    , (-0.5), ( 0.5), (-0.5),   ( 0.0), ( 1.0), ( 0.0),     0.0, 0.0
-                    ] :: [Float]
-    vertices <- newArray verticesL
-    let verticesSize = fromIntegral $ sizeOf (0.0 :: Float) * length verticesL
-
-
-    -- must be vbo then vao
-    vao <- tempVBO GL.ArrayBuffer $ initVAO $ liftIO do
-        GL.bufferData GL.ArrayBuffer $= (verticesSize, vertices, GL.StaticDraw)
-
-        GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) nullPtr)
-        GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
-
-        GL.vertexAttribPointer (GL.AttribLocation 1) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (3 * (sizeOf (0.0 :: Float)))))
-        GL.vertexAttribArray (GL.AttribLocation 1) $= GL.Enabled
-
-        GL.vertexAttribPointer (GL.AttribLocation 2) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (6 * (sizeOf (0.0 :: Float)))))
-        GL.vertexAttribArray (GL.AttribLocation 2) $= GL.Enabled
-    return vao
-
 
 createSphere = do
     
@@ -235,49 +102,73 @@ createSphere = do
     GL.deleteObjectName indVBO
     return (vao, indicesSize `div` 3)
 
+data GLTFAsset = GLTFAsset { textures :: V.Vector GL.TextureObject
+                           , objects :: V.Vector GL.VertexArrayObject
+                           } deriving Show
 
-createPlane = do
+loadGLTFAsset :: FilePath -> IO (Either String GLTFAsset)
+loadGLTFAsset file = runExceptT do
+    model <- ExceptT $ GLTF.fromFile file
+
+    textures <- ExceptT $ loadTextures model $ takeDirectory file
+    objs <- ExceptT $ loadObjects model $ takeDirectory file
+
+    return $ GLTFAsset textures objs
+
+maybeToRight :: b -> Maybe a -> Either b a
+maybeToRight b (Just a) = Right a
+maybeToRight b Nothing = Left b
+
+fromMaybe :: (Monad m) => Maybe a -> ExceptT String m a
+fromMaybe x = ExceptT $ return $ maybeToRight "value doesnt exist" x
+
+forM = flip mapM
+
+loadObjects :: GLTF.GlTF -> String -> IO (Either String (V.Vector GL.VertexArrayObject))
+loadObjects model root = runExceptT do
+    meshObjs <- fromMaybe $ GLTF.meshes model
+    buffers <- fromMaybe $ GLTF.buffers model
     
-    let verticesL = fullPlaneVertexList 5 10
-    vertices <- newArray verticesL
-    let verticesSize = fromIntegral $ sizeOf (0.0 :: Float) * length verticesL
 
-    let indicesL = fromIntegral <$> planeIndexList 5 10 :: [Word32]
-    indices <- newArray indicesL
-    let indicesSize = fromIntegral $ sizeOf (0 :: Word32) * length indicesL
+    meshes <- forM meshObjs $ \mesh -> forM (Mesh.primitives mesh) \primitive -> do
+        indicesIx <- fromMaybe $ Mesh.indices primitive
+        materialIx <- fromMaybe $ Mesh.material primitive
+        let mode = Mesh.mode primitive
+        let attributes = Mesh.attributes primitive
+        normalIx <- fromMaybe $ HM.lookup "NORMAL" attributes
+        positionIx <- fromMaybe $ HM.lookup "POSITION" attributes
+        tangentIx <- fromMaybe $ HM.lookup "TANGENT" attributes
+        texCoord0Ix <- fromMaybe $ HM.lookup "TEXCOORD_0" attributes
+        vao <- GL.genObjectName
+        return vao
+    
+    liftIO $ print meshes
+    return $ V.concat $ V.toList meshes
 
-    vao <- GL.genObjectName :: IO GL.VertexArrayObject
-    vertVBO <- GL.genObjectName :: IO GL.BufferObject
-    indVBO <- GL.genObjectName :: IO GL.BufferObject
+loadTextures :: GLTF.GlTF -> String -> IO (Either String (V.Vector GL.TextureObject))
+loadTextures model root = runExceptT do
+    texObjs <- fromMaybe $ GLTF.textures model
+    imgObjs <- fromMaybe $ GLTF.images model
+    textures <- forM imgObjs $ \img -> do
+        URI.URI uri <- fromMaybe $ Image.uri img
+        let path = root </> T.unpack uri
+        (obj, _size) <- liftIO $ loadTexture path
+        return obj
 
-    GL.bindVertexArrayObject $= Just vao
-
-    GL.bindBuffer GL.ArrayBuffer $= Just vertVBO
-    GL.bufferData GL.ArrayBuffer $= (verticesSize, vertices, GL.StaticDraw)
-
-    GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) nullPtr)
-    GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
-
-    GL.vertexAttribPointer (GL.AttribLocation 1) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (3 * (sizeOf (0.0 :: Float)))))
-    GL.vertexAttribArray (GL.AttribLocation 1) $= GL.Enabled
-
-    GL.vertexAttribPointer (GL.AttribLocation 2) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (6 * (sizeOf (0.0 :: Float)))))
-    GL.vertexAttribArray (GL.AttribLocation 2) $= GL.Enabled
-
-    GL.bindBuffer GL.ElementArrayBuffer $= Just indVBO
-    GL.bufferData GL.ElementArrayBuffer $= (indicesSize, indices, GL.StaticDraw)
-    GL.bindBuffer GL.ElementArrayBuffer $= Just indVBO
-
-    GL.bindVertexArrayObject $= Nothing
-    GL.deleteObjectName vertVBO
-    GL.deleteObjectName indVBO
-    return (vao, indicesSize `div` 3)
-
+    liftIO $ print texObjs
+    return textures
 
 initAssets :: IO Assets
 initAssets = do
+    vert <- BS.readFile "resources/shaders/full.vert"
+    frag <- BS.readFile "resources/shaders/full.frag"
     Just program <- compileShader vert frag Nothing 
 
+
+    asset <- loadGLTFAsset "resources/AnimatedCube/AnimatedCube.gltf"
+    print asset
+
+    error "some shit"
 
     (sphereVAO, numTris) <- createSphere
 
@@ -340,7 +231,7 @@ degToRad = (*pi).(/180)
 
 main :: IO ()
 main = do
-    window <- initWindow (V2 800 600) "Model Loading"
+    window <- initWindow (V2 800 600) "Box example"
 
     -- GL.polygonMode $= (GL.Line, GL.Line)
     

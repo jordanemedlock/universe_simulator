@@ -36,6 +36,8 @@ dependencies:
 - transformers
 - gltf-codec
 - lens
+- text
+- unordered-containers
 
 library:
   source-dirs: engine
@@ -69,6 +71,11 @@ executables:
     - universe-simulator
   camera-movement:
     source-dirs: examples/camera-movement
+    main: Main.hs
+    dependencies:
+    - universe-simulator
+  model-loading:
+    source-dirs: examples/model-loading
     main: Main.hs
     dependencies:
     - universe-simulator
