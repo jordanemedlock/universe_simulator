@@ -1,4 +1,4 @@
-
+{-# LANGUAGE DuplicateRecordFields #-}
 module Main where
 
 import qualified Graphics.UI.GLFW as GLFW
@@ -23,18 +23,22 @@ import qualified Codec.GlTF as GLTF
 import qualified Codec.GlTF.Image as Image
 import qualified Codec.GlTF.URI as URI
 import qualified Codec.GlTF.Mesh as Mesh
+import qualified Codec.GlTF.Buffer as Buffer
+import qualified Codec.GlTF.Accessor as Accessor
+import qualified Codec.GlTF.Material as Material
 import Data.Either
 import qualified Data.Vector as V
 import qualified Data.Text as T
 import System.FilePath.Posix
 import qualified Data.HashMap.Strict as HM
+import qualified Codec.GlTF.BufferView as BufferView
 
 
 
 planeVertexList :: Int -> Int -> [(Float, Float, Float)]
-planeVertexList rows cols = concat [ [ (fromIntegral r / fromIntegral (rows-1), fromIntegral c / fromIntegral (cols-1), 0.0) 
+planeVertexList rows cols = concat [ [ (fromIntegral r / fromIntegral (rows-1), fromIntegral c / fromIntegral (cols-1), 0.0)
                                      | c <- [0..cols-1]
-                                     ] 
+                                     ]
                                    | r <- [0..rows-1]
                                    ]
 
@@ -56,7 +60,7 @@ sphereIndexList :: Int -> [Int]
 sphereIndexList n = planeIndexList n (n*2)
 
 fullSphereVertexList :: Int -> [Float]
-fullSphereVertexList n = concat [ [ x, y, z, x, y, z, u, v ] 
+fullSphereVertexList n = concat [ [ x, y, z, x, y, z, u, v ]
                                 | (i, (x, y, z)) <- zip [0..] $ sphereVertexList n
                                 , let (iv, iu) = i `divMod` (n*2)
                                 , let fn = fromIntegral n
@@ -64,7 +68,7 @@ fullSphereVertexList n = concat [ [ x, y, z, x, y, z, u, v ]
                                 ]
 
 createSphere = do
-    
+
     let n = 20
 
     let verticesL = fullSphereVertexList n
@@ -124,24 +128,95 @@ fromMaybe x = ExceptT $ return $ maybeToRight "value doesnt exist" x
 
 forM = flip mapM
 
+loadBuffer :: Buffer.Buffer -> String -> IO (Either String BS.ByteString)
+loadBuffer buffer root = runExceptT do
+    URI.URI fileName <- fromMaybe $ Buffer.uri buffer
+    liftIO $ BS.readFile $ root </> T.unpack fileName
+
+loadBufferView :: BufferView.BufferView -> BS.ByteString -> Either String BS.ByteString
+loadBufferView bufferView buffer = runExcept do
+    let offset = BufferView.byteOffset bufferView
+    let length = BufferView.byteLength bufferView
+    let (_start, rest) = BS.splitAt offset buffer
+    let (newBuffer, _rest) = BS.splitAt length rest
+    return newBuffer
+
+data AccessorValue = AccessorValue {} deriving Show
+
+loadAccessors :: GLTF.GlTF -> String -> IO (Either String (V.Vector BS.ByteString))
+loadAccessors model root = runExceptT do
+    buffers <- fromMaybe $ GLTF.buffers model
+    bufferViews <- fromMaybe $ GLTF.bufferViews model
+    accessors <- fromMaybe $ GLTF.accessors model
+
+    bufferByteStrings <- liftIO $ mapM (`loadBuffer` root) buffers
+
+    forM accessors $ \acc -> do
+        bvIdx <- fromMaybe $ (Accessor.bufferView :: Accessor.Accessor -> Maybe BufferView.BufferViewIx) acc
+        bufferView <- V.indexM bufferViews $ BufferView.unBufferViewIx bvIdx
+        buffer <- ExceptT $ V.indexM bufferByteStrings $ Buffer.unBufferIx $ BufferView.buffer bufferView
+        ExceptT $ return $ loadBufferView bufferView buffer
+
 loadObjects :: GLTF.GlTF -> String -> IO (Either String (V.Vector GL.VertexArrayObject))
 loadObjects model root = runExceptT do
     meshObjs <- fromMaybe $ GLTF.meshes model
-    buffers <- fromMaybe $ GLTF.buffers model
-    
+    accessorsBS <- ExceptT $ loadAccessors model root
+    accessors <- fromMaybe $ GLTF.accessors model
+    liftIO $ print accessorsBS
+
 
     meshes <- forM meshObjs $ \mesh -> forM (Mesh.primitives mesh) \primitive -> do
         indicesIx <- fromMaybe $ Mesh.indices primitive
+        indicesBS <- V.indexM accessorsBS $ Accessor.unAccessorIx indicesIx
         materialIx <- fromMaybe $ Mesh.material primitive
+        -- materialBS <- V.indexM accessorsBS $ Material.unMaterialIx materialIx
         let mode = Mesh.mode primitive
         let attributes = Mesh.attributes primitive
         normalIx <- fromMaybe $ HM.lookup "NORMAL" attributes
+        normalBS <- V.indexM accessorsBS $ Accessor.unAccessorIx normalIx
+
         positionIx <- fromMaybe $ HM.lookup "POSITION" attributes
+        positionBS <- V.indexM accessorsBS $ Accessor.unAccessorIx positionIx
+        positionAcc <- V.indexM accessors $ Accessor.unAccessorIx positionIx
+
         tangentIx <- fromMaybe $ HM.lookup "TANGENT" attributes
+        tangentBS <- V.indexM accessorsBS $ Accessor.unAccessorIx tangentIx
+        tangentAcc <- V.indexM accessors $ Accessor.unAccessorIx tangentIx
+
         texCoord0Ix <- fromMaybe $ HM.lookup "TEXCOORD_0" attributes
-        vao <- GL.genObjectName
-        return vao
-    
+        texCoord0BS <- V.indexM accessorsBS $ Accessor.unAccessorIx texCoord0Ix
+        texCoord0Acc <- V.indexM accessors $ Accessor.unAccessorIx texCoord0Ix
+
+        liftIO do
+            vao <- GL.genObjectName
+            -- TODO: pull all data (index and vertex) into the same buffer object.
+            -- you will need to find how to specify the index on the buffer.
+            indicesVBO <- GL.genObjectName :: IO GL.BufferObject
+            normalVBO <- GL.genObjectName :: IO GL.BufferObject
+            positionVBO <- GL.genObjectName :: IO GL.BufferObject
+            tangentVBO <- GL.genObjectName :: IO GL.BufferObject
+            texCoord0VBO <- GL.genObjectName :: IO GL.BufferObject
+
+
+            GL.bindVertexArrayObject $= Just vao
+
+            GL.bindBuffer GL.ElementArrayBuffer $= Just indicesVBO
+            BS.useAsCString indicesBS $ \ptr -> do
+                GL.bufferData GL.ElementArrayBuffer $= (fromIntegral $ BS.length indicesBS, ptr, GL.StaticDraw)
+            GL.bindBuffer GL.ElementArrayBuffer $= Nothing
+
+            GL.bindBuffer GL.ArrayBuffer $= Just positionVBO
+            BS.useAsCString positionBS $ \ptr -> do
+                GL.bufferData GL.ArrayBuffer $= (fromIntegral $ BS.length positionBS, ptr, GL.StaticDraw)
+            GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ BS.length positionBS))
+
+
+            liftIO $ error "stop here"
+
+
+            liftIO $ print vao
+            return vao
+
     liftIO $ print meshes
     return $ V.concat $ V.toList meshes
 
@@ -162,7 +237,7 @@ initAssets :: IO Assets
 initAssets = do
     vert <- BS.readFile "resources/shaders/full.vert"
     frag <- BS.readFile "resources/shaders/full.frag"
-    Just program <- compileShader vert frag Nothing 
+    Just program <- compileShader vert frag Nothing
 
 
     asset <- loadGLTFAsset "resources/AnimatedCube/AnimatedCube.gltf"
@@ -206,7 +281,7 @@ cameraMatrix cam = lookAt (cam^.position) (cam^.position + cameraForward cam) (V
 
 cameraForward :: Camera -> V3 Float
 cameraForward cam = normalize $ V3 dx dy dz
-    where 
+    where
         dx = cos (degToRad $ cam^.yaw) * cos (degToRad $ cam^.pitch)
         dy = sin (degToRad $ cam^.pitch)
         dz = sin (degToRad $ cam^.yaw) * cos (degToRad $ cam^.pitch)
@@ -226,7 +301,7 @@ moveCameraRight speed cam = cam & position +~ cameraRight cam ^* speed
 moveCameraUp :: Float -> Camera -> Camera
 moveCameraUp speed cam = cam & position +~ cameraUp cam ^* speed
 
-degToRad :: Float -> Float 
+degToRad :: Float -> Float
 degToRad = (*pi).(/180)
 
 main :: IO ()
@@ -234,7 +309,7 @@ main = do
     window <- initWindow (V2 800 600) "Box example"
 
     -- GL.polygonMode $= (GL.Line, GL.Line)
-    
+
     let fov = 45 :: Float
     let ratio = 800 / 600.0
     let near = 0.1
@@ -243,7 +318,7 @@ main = do
     projection <- perspectiveMatrix fov ratio near far
 
     assets <- initAssets
-    state <- newIORef =<< initState 
+    state <- newIORef =<< initState
 
     let game = Game window assets state
 
@@ -292,7 +367,7 @@ mainLoop = do
     state <- liftIO $ readIORef $ game^.gameState
     case state^.mode of
         Playing -> playing
-        Paused -> playing 
+        Paused -> playing
         Stopped -> return ()
 
 playing :: ReaderT Game IO ()
@@ -302,7 +377,7 @@ playing = do
     let earthA = game^.assets^.earth
     let earthT = state^.earth^.transform
     let cam = state^.camera
-    
+
     thisTime <- liftIO do
         GLFW.pollEvents
 
@@ -315,9 +390,9 @@ playing = do
     let speed = 0
 
     liftIO do
-        modifyIORef (game^.gameState) $ (earth.transform.rotation.euler._z) %~ (+(realToFrac $ dt*speed)) 
+        modifyIORef (game^.gameState) $ (earth.transform.rotation.euler._z) %~ (+(realToFrac $ dt*speed))
         modifyIORef (game^.gameState) $ (lastTime) .~ thisTime
-        
+
     -- liftIO $ putStrLn $ "yaw: " ++ (show $ cam^.yaw) ++ " pitch: " ++ (show $ cam^.pitch)
 
     let view = cameraMatrix cam
@@ -345,13 +420,13 @@ playing = do
         liftIO $ GL.textureBinding GL.Texture2D $= Just (earthA^.texture)
 
         withVAO (earthA^.object) $ liftIO $ GL.drawElements GL.Triangles (fromIntegral (earthA^.numTris)) GL.UnsignedInt nullPtr -- size of the cube array
-        
-    
+
+
     shouldClose <- liftIO do
-    
+
         GLFW.swapBuffers (game^.window)
         GLFW.windowShouldClose (game^.window)
-    if shouldClose 
+    if shouldClose
         then return ()
         else mainLoop
 
