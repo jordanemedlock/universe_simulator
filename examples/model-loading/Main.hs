@@ -1,4 +1,4 @@
-{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE DuplicateRecordFields, ScopedTypeVariables #-}
 module Main where
 
 import qualified Graphics.UI.GLFW as GLFW
@@ -32,6 +32,7 @@ import qualified Data.Text as T
 import System.FilePath.Posix
 import qualified Data.HashMap.Strict as HM
 import qualified Codec.GlTF.BufferView as BufferView
+import Data.String (IsString)
 
 
 
@@ -157,59 +158,66 @@ loadAccessors model root = runExceptT do
         buffer <- ExceptT $ V.indexM bufferByteStrings $ Buffer.unBufferIx $ BufferView.buffer bufferView
         ExceptT $ return $ loadBufferView bufferView buffer
 
+gltfNameToAttribName "TEXCOORD_0" = "texCoord0"
+gltfNameToAttribName name = T.toLower name
+
 loadObjects :: GLTF.GlTF -> String -> IO (Either String (V.Vector GL.VertexArrayObject))
 loadObjects model root = runExceptT do
     meshObjs <- fromMaybe $ GLTF.meshes model
-    accessorsBS <- ExceptT $ loadAccessors model root
+    buffers <- fromMaybe $ GLTF.buffers model
+    bufferViews <- fromMaybe $ GLTF.bufferViews model
     accessors <- fromMaybe $ GLTF.accessors model
-    liftIO $ print accessorsBS
+
+    buffersBS <- liftIO $ V.fromList.rights.V.toList <$> mapM (`loadBuffer` root) buffers
 
 
     meshes <- forM meshObjs $ \mesh -> forM (Mesh.primitives mesh) \primitive -> do
-        indicesIx <- fromMaybe $ Mesh.indices primitive
-        indicesBS <- V.indexM accessorsBS $ Accessor.unAccessorIx indicesIx
+        indicesIx <- Accessor.unAccessorIx <$> fromMaybe (Mesh.indices primitive)
+        indicesAcc <- fromMaybe $ V.indexM accessors indicesIx
+        indicesBVI <- fromMaybe $ (Accessor.bufferView :: Accessor.Accessor -> Maybe BufferView.BufferViewIx) indicesAcc
+        indicesBV <- fromMaybe $ V.indexM bufferViews $ BufferView.unBufferViewIx indicesBVI
+        indicesBS <- fromMaybe $ V.indexM buffersBS $ Buffer.unBufferIx $ BufferView.buffer indicesBV
+        -- TODO: assuming vertices and indices are on same buffer :-/
         materialIx <- fromMaybe $ Mesh.material primitive
         -- materialBS <- V.indexM accessorsBS $ Material.unMaterialIx materialIx
         let mode = Mesh.mode primitive
         let attributes = Mesh.attributes primitive
-        normalIx <- fromMaybe $ HM.lookup "NORMAL" attributes
-        normalBS <- V.indexM accessorsBS $ Accessor.unAccessorIx normalIx
-
-        positionIx <- fromMaybe $ HM.lookup "POSITION" attributes
-        positionBS <- V.indexM accessorsBS $ Accessor.unAccessorIx positionIx
-        positionAcc <- V.indexM accessors $ Accessor.unAccessorIx positionIx
-
-        tangentIx <- fromMaybe $ HM.lookup "TANGENT" attributes
-        tangentBS <- V.indexM accessorsBS $ Accessor.unAccessorIx tangentIx
-        tangentAcc <- V.indexM accessors $ Accessor.unAccessorIx tangentIx
-
-        texCoord0Ix <- fromMaybe $ HM.lookup "TEXCOORD_0" attributes
-        texCoord0BS <- V.indexM accessorsBS $ Accessor.unAccessorIx texCoord0Ix
-        texCoord0Acc <- V.indexM accessors $ Accessor.unAccessorIx texCoord0Ix
-
         liftIO do
             vao <- GL.genObjectName
             -- TODO: pull all data (index and vertex) into the same buffer object.
             -- you will need to find how to specify the index on the buffer.
+            -- actually I can keep indices on a separate buffer and keep all the attributes on
+            -- the same buffer.  I can also iterate over each of them and give them all 
+            -- attribute locations based on their name.  so "NORMAL" => attribLocation "normal"
             indicesVBO <- GL.genObjectName :: IO GL.BufferObject
-            normalVBO <- GL.genObjectName :: IO GL.BufferObject
-            positionVBO <- GL.genObjectName :: IO GL.BufferObject
-            tangentVBO <- GL.genObjectName :: IO GL.BufferObject
-            texCoord0VBO <- GL.genObjectName :: IO GL.BufferObject
-
+            vertexVBO <- GL.genObjectName :: IO GL.BufferObject
 
             GL.bindVertexArrayObject $= Just vao
 
             GL.bindBuffer GL.ElementArrayBuffer $= Just indicesVBO
             BS.useAsCString indicesBS $ \ptr -> do
-                GL.bufferData GL.ElementArrayBuffer $= (fromIntegral $ BS.length indicesBS, ptr, GL.StaticDraw)
+                -- TODO this ignores stride length, this could be bad lol
+                GL.bufferData GL.ElementArrayBuffer $= (fromIntegral $ BufferView.byteLength indicesBV, ptr `plusPtr` BufferView.byteOffset indicesBV, GL.StaticDraw) 
             GL.bindBuffer GL.ElementArrayBuffer $= Nothing
 
-            GL.bindBuffer GL.ArrayBuffer $= Just positionVBO
-            BS.useAsCString positionBS $ \ptr -> do
-                GL.bufferData GL.ArrayBuffer $= (fromIntegral $ BS.length positionBS, ptr, GL.StaticDraw)
-            GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ BS.length positionBS))
+            GL.bindBuffer GL.ArrayBuffer $= Just vertexVBO
+            BS.useAsCString indicesBS $ \ptr -> do
+                GL.bufferData GL.ArrayBuffer $= (fromIntegral $ BS.length indicesBS, ptr, GL.StaticDraw)
 
+            let inner = \(name, accessorIx) -> do
+                let attribName = gltfNameToAttribName name
+                -- TODO: appearantly this needs program, but it feels weird to supply it just for this
+                loc <- liftIO $ GL.get $ GL.attribLocation program (T.unpack attribName)
+                accessor <- fromMaybe $ V.indexM (Accessor.unAccessorIx accessorIx)
+
+                count <- fromMaybe $ Accessor.count accessor
+                bufferViewIx <- fromMaybe $ (Accessor.bufferView :: Accessor.Accessor -> Maybe BufferView.BufferViewIx) accessor
+
+                bufferView <- fromMaybe $ V.indexM  
+                GL.vertexAttribPointer loc $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ BS.length positionBS))
+
+
+            x <- forM (HM.toList attributes) inner
 
             liftIO $ error "stop here"
 
