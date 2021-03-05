@@ -1,0 +1,14 @@
+cradle:
+  stack:
+    - path: "engine"
+      component: "universe-simulator"
+    - path: "examples/blank-window"
+      component: "universe-simulator:blank-window"
+    - path: "examples/box"
+      component: "universe-simulator:box"
+    - path: "examples/camera-movement"
+      component: "universe-simulator:camera-movement"
+    - path: "examples/earth-sphere"
+      component: "universe-simulator:earth-sphere"
+    - path: "examples/textured-box"
+      component: "universe-simulator:textured-box"
