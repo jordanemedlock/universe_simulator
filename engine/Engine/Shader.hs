@@ -7,14 +7,43 @@ import Graphics.Rendering.OpenGL (($=))
 import qualified Data.ByteString as BS
 import Control.Monad.Trans.Reader
 import Control.Monad.IO.Class
+import System.Directory
+import Control.Monad.Trans.Except
+import System.FilePath.Posix
+
+ifM :: (Monad m) => m Bool -> m a -> m a -> m a
+ifM c a b = do 
+    v <- c
+    if v then a else b
+
+eitherToMaybe :: Either a b -> Maybe b
+eitherToMaybe (Right a) = Just a
+eitherToMaybe _ = Nothing
+
+readIfExists :: (MonadIO m) => FilePath -> m (Either String BS.ByteString)
+readIfExists path = liftIO $ ifM (doesFileExist path) 
+                                 (Right <$> BS.readFile path) 
+                                 (return $ Left $ "File does not exist " <> path)
+
+loadShader :: (MonadIO m) => String -> m (Either String GL.Program)
+loadShader filePath = runExceptT do
+    let vertFile = filePath <.> "vert"
+    let fragFile = filePath <.> "frag"
+    let geomFile = filePath <.> "geom"
+
+    vertSource <- ExceptT $ readIfExists vertFile
+    fragSource <- ExceptT $ readIfExists fragFile
+    mGeomSource <- liftIO $ eitherToMaybe <$> readIfExists geomFile
+    ExceptT $ compileShader vertSource fragSource mGeomSource
 
 
 -- | Compiles shader from its strings
-compileShader   :: BS.ByteString -- ^ Vertex Soure
+compileShader   :: (MonadIO m)
+                => BS.ByteString -- ^ Vertex Soure
                 -> BS.ByteString -- ^ Fragment Source
                 -> Maybe BS.ByteString -- ^ Optional Geometry Source
-                -> IO (Maybe GL.Program)
-compileShader vertexSource fragmentSource mGeometrySource = do
+                -> m (Either String GL.Program)
+compileShader vertexSource fragmentSource mGeometrySource = liftIO do
     vertex <- GL.createShader GL.VertexShader
     fragment <- GL.createShader GL.FragmentShader
 
@@ -53,7 +82,7 @@ compileShader vertexSource fragmentSource mGeometrySource = do
             putStrLn $ "Fragment Shader: " ++ fragmentInfoLog
             putStrLn $ "Geometry Shader: " ++ geometryInfoLog
 
-            return Nothing
+            return $ Left "Failed to compile shader"
         else do
             program <- GL.createProgram
 
@@ -69,8 +98,8 @@ compileShader vertexSource fragmentSource mGeometrySource = do
                 then do
                     GL.deleteObjectNames $ [vertex, fragment] ++ maybe [] (:[]) mGeometry
 
-                    return $ Just program
-                else return Nothing
+                    return $ Right program
+                else return $ Left "Failed to link shader"
 
 type ShaderMonad = ReaderT GL.Program
 type VAOMonad = ReaderT GL.VertexArrayObject

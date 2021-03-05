@@ -7,11 +7,11 @@ import Control.Lens.TH
 import Linear
 import Data.Time
 import Data.IORef
+import Engine
 
 
 data EarthAssets = EarthAssets
-    { _earthAssetsObject :: GL.VertexArrayObject
-    , _earthAssetsNumTris :: GL.GLsizeiptr
+    { _earthAssetsMesh :: MeshAsset
     , _earthAssetsTexture :: GL.TextureObject
     } deriving (Show)
 
@@ -24,33 +24,6 @@ data Assets = Assets
 
 makeFields ''Assets
 
-data Rotation a = EulerRotation
-    { _rotationEuler :: V3 a -- Euler angles in degrees (for funsies)
-    }
-    | QuaternionRotation
-    { _rotationQuaternion :: Quaternion a
-    } deriving (Show)
-
-makeFields ''Rotation
-
-data Transform a = Transform
-    { _transformRotation :: Rotation a 
-    , _transformPosition :: V3 a
-    } deriving (Show)
-
-makeFields ''Transform
-
-data Camera = Camera 
-    { _cameraPitch :: Float
-    , _cameraYaw :: Float
-    , _cameraPosition :: V3 Float 
-    , _cameraFov :: Float 
-    , _cameraRatio :: Float
-    , _cameraNear :: Float
-    , _cameraFar :: Float
-    } deriving (Show)
-
-makeFields ''Camera
 
 newtype Earth = Earth
     { _earthTransform :: Transform Float
