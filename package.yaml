@@ -34,10 +34,10 @@ dependencies:
 - time 
 - vector
 - transformers
-- gltf-codec
 - lens
 - text
 - unordered-containers
+- aeson
 
 library:
   source-dirs: engine
@@ -51,29 +51,29 @@ library:
   # - freetype2 >=0.2 && <0.3
 
 executables:
-  blank-window:
-    source-dirs: examples/blank-window
-    main: Main.hs
-  box:
-    source-dirs: examples/box
-    main: Main.hs
-    dependencies:
-    - universe-simulator
-  textured-box:
-    source-dirs: examples/textured-box
-    main: Main.hs
-    dependencies:
-    - universe-simulator
-  earth-sphere:
-    source-dirs: examples/earth-sphere
-    main: Main.hs
-    dependencies:
-    - universe-simulator
-  camera-movement:
-    source-dirs: examples/camera-movement
-    main: Main.hs
-    dependencies:
-    - universe-simulator
+  # blank-window:
+  #   source-dirs: examples/blank-window
+  #   main: Main.hs
+  # box:
+  #   source-dirs: examples/box
+  #   main: Main.hs
+  #   dependencies:
+  #   - universe-simulator
+  # textured-box:
+  #   source-dirs: examples/textured-box
+  #   main: Main.hs
+  #   dependencies:
+  #   - universe-simulator
+  # earth-sphere:
+  #   source-dirs: examples/earth-sphere
+  #   main: Main.hs
+  #   dependencies:
+  #   - universe-simulator
+  # camera-movement:
+  #   source-dirs: examples/camera-movement
+  #   main: Main.hs
+  #   dependencies:
+  #   - universe-simulator
   model-loading:
     source-dirs: examples/model-loading
     main: Main.hs

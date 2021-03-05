@@ -1,0 +1,12 @@
+cradle:
+  stack:
+    stackYaml: "stack.yaml"
+    components:
+    - path: "./engine"
+      component: "universe-simulator"
+    - path: "./examples/model-loading"
+      component: "universe-simulator:model-loading"
+    # - path: "./tests/BiosTests.hs"
+    #   component: "hie-bios:test:hie-bios"
+    # - path: "./tests/ParserTests.hs"
+    #   component: "hie-bios:test:parser-tests"

@@ -1,4 +1,5 @@
-{-# LANGUAGE DuplicateRecordFields, ScopedTypeVariables #-}
+{-# LANGUAGE DuplicateRecordFields, ScopedTypeVariables, MultiParamTypeClasses #-}
+{-# LANGUAGE TypeApplications #-}
 module Main where
 
 import qualified Graphics.UI.GLFW as GLFW
@@ -8,7 +9,7 @@ import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
 import Data.Time (getCurrentTime, diffUTCTime, UTCTime)
-import Engine
+import Engine as E
 import Text.RawString.QQ
 import Control.Monad.IO.Class
 import qualified Data.ByteString as BS
@@ -19,22 +20,13 @@ import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Except
 import Linear hiding (vector)
 import Data.IORef
-import qualified Codec.GlTF as GLTF
-import qualified Codec.GlTF.Image as Image
-import qualified Codec.GlTF.URI as URI
-import qualified Codec.GlTF.Mesh as Mesh
-import qualified Codec.GlTF.Buffer as Buffer
-import qualified Codec.GlTF.Accessor as Accessor
-import qualified Codec.GlTF.Material as Material
 import Data.Either
 import qualified Data.Vector as V
 import qualified Data.Text as T
 import System.FilePath.Posix
 import qualified Data.HashMap.Strict as HM
-import qualified Codec.GlTF.BufferView as BufferView
 import Data.String (IsString)
-
-
+import Data.Aeson (eitherDecodeFileStrict)
 
 planeVertexList :: Int -> Int -> [(Float, Float, Float)]
 planeVertexList rows cols = concat [ [ (fromIntegral r / fromIntegral (rows-1), fromIntegral c / fromIntegral (cols-1), 0.0)
@@ -113,7 +105,7 @@ data GLTFAsset = GLTFAsset { textures :: V.Vector GL.TextureObject
 
 loadGLTFAsset :: FilePath -> IO (Either String GLTFAsset)
 loadGLTFAsset file = runExceptT do
-    model <- ExceptT $ GLTF.fromFile file
+    model <- ExceptT $ (eitherDecodeFileStrict file :: IO (Either String GLTF))
 
     textures <- ExceptT $ loadTextures model $ takeDirectory file
     objs <- ExceptT $ loadObjects model $ takeDirectory file
@@ -129,117 +121,118 @@ fromMaybe x = ExceptT $ return $ maybeToRight "value doesnt exist" x
 
 forM = flip mapM
 
-loadBuffer :: Buffer.Buffer -> String -> IO (Either String BS.ByteString)
+loadBuffer :: Buffer -> String -> IO (Either String BS.ByteString)
 loadBuffer buffer root = runExceptT do
-    URI.URI fileName <- fromMaybe $ Buffer.uri buffer
+    fileName <- fromMaybe $ buffer ^. uri
     liftIO $ BS.readFile $ root </> T.unpack fileName
 
-loadBufferView :: BufferView.BufferView -> BS.ByteString -> Either String BS.ByteString
+loadBufferView :: BufferView -> BS.ByteString -> Either String BS.ByteString
 loadBufferView bufferView buffer = runExcept do
-    let offset = BufferView.byteOffset bufferView
-    let length = BufferView.byteLength bufferView
+    let offset = bufferView ^. byteOffset
+    let length = bufferView ^. byteLength
     let (_start, rest) = BS.splitAt offset buffer
     let (newBuffer, _rest) = BS.splitAt length rest
     return newBuffer
 
 data AccessorValue = AccessorValue {} deriving Show
 
-loadAccessors :: GLTF.GlTF -> String -> IO (Either String (V.Vector BS.ByteString))
+loadAccessors :: GLTF -> String -> IO (Either String (V.Vector BS.ByteString))
 loadAccessors model root = runExceptT do
-    buffers <- fromMaybe $ GLTF.buffers model
-    bufferViews <- fromMaybe $ GLTF.bufferViews model
-    accessors <- fromMaybe $ GLTF.accessors model
+    bs <- fromMaybe $ model ^. buffers
+    bvs <- fromMaybe $ model ^. bufferViews
+    accessors <- fromMaybe $ accessors model
 
     bufferByteStrings <- liftIO $ mapM (`loadBuffer` root) buffers
 
     forM accessors $ \acc -> do
-        bvIdx <- fromMaybe $ (Accessor.bufferView :: Accessor.Accessor -> Maybe BufferView.BufferViewIx) acc
-        bufferView <- V.indexM bufferViews $ BufferView.unBufferViewIx bvIdx
-        buffer <- ExceptT $ V.indexM bufferByteStrings $ Buffer.unBufferIx $ BufferView.buffer bufferView
+        bvIdx <- fromMaybe $ bufferView acc
+        bufferView <- V.indexM bufferViews bvIdx
+        buffer <- ExceptT $ V.indexM bufferByteStrings $ buffer bufferView
         ExceptT $ return $ loadBufferView bufferView buffer
 
 gltfNameToAttribName "TEXCOORD_0" = "texCoord0"
 gltfNameToAttribName name = T.toLower name
 
-loadObjects :: GLTF.GlTF -> String -> IO (Either String (V.Vector GL.VertexArrayObject))
+loadObjects :: GLTF -> String -> IO (Either String (V.Vector GL.VertexArrayObject))
 loadObjects model root = runExceptT do
-    meshObjs <- fromMaybe $ GLTF.meshes model
-    buffers <- fromMaybe $ GLTF.buffers model
-    bufferViews <- fromMaybe $ GLTF.bufferViews model
-    accessors <- fromMaybe $ GLTF.accessors model
+    meshObjs <- fromMaybe $ meshes model
+    buffers <- fromMaybe $ buffers model
+    bufferViews <- fromMaybe $ bufferViews model
+    accessors <- fromMaybe $ accessors model
 
     buffersBS <- liftIO $ V.fromList.rights.V.toList <$> mapM (`loadBuffer` root) buffers
 
+    error "unimplemented"
+    -- meshes <- forM meshObjs $ \mesh -> forM (Mesh.primitives mesh) \primitive -> do
+    --     indicesIx <- Accessor.unAccessorIx <$> fromMaybe (Mesh.indices primitive)
+    --     indicesAcc <- fromMaybe $ V.indexM accessors indicesIx
+    --     indicesBVI <- fromMaybe $ (Accessor.bufferView :: Accessor.Accessor -> Maybe BufferView.BufferViewIx) indicesAcc
+    --     indicesBV <- fromMaybe $ V.indexM bufferViews $ BufferView.unBufferViewIx indicesBVI
+    --     indicesBS <- fromMaybe $ V.indexM buffersBS $ Buffer.unBufferIx $ BufferView.buffer indicesBV
+    --     -- TODO: assuming vertices and indices are on same buffer :-/
+    --     materialIx <- fromMaybe $ Mesh.material primitive
+    --     -- materialBS <- V.indexM accessorsBS $ Material.unMaterialIx materialIx
+    --     let mode = Mesh.mode primitive
+    --     let attributes = Mesh.attributes primitive
+    --     liftIO do
+    --         vao <- GL.genObjectName
+    --         -- TODO: pull all data (index and vertex) into the same buffer object.
+    --         -- you will need to find how to specify the index on the buffer.
+    --         -- actually I can keep indices on a separate buffer and keep all the attributes on
+    --         -- the same buffer.  I can also iterate over each of them and give them all 
+    --         -- attribute locations based on their name.  so "NORMAL" => attribLocation "normal"
+    --         indicesVBO <- GL.genObjectName :: IO GL.BufferObject
+    --         vertexVBO <- GL.genObjectName :: IO GL.BufferObject
 
-    meshes <- forM meshObjs $ \mesh -> forM (Mesh.primitives mesh) \primitive -> do
-        indicesIx <- Accessor.unAccessorIx <$> fromMaybe (Mesh.indices primitive)
-        indicesAcc <- fromMaybe $ V.indexM accessors indicesIx
-        indicesBVI <- fromMaybe $ (Accessor.bufferView :: Accessor.Accessor -> Maybe BufferView.BufferViewIx) indicesAcc
-        indicesBV <- fromMaybe $ V.indexM bufferViews $ BufferView.unBufferViewIx indicesBVI
-        indicesBS <- fromMaybe $ V.indexM buffersBS $ Buffer.unBufferIx $ BufferView.buffer indicesBV
-        -- TODO: assuming vertices and indices are on same buffer :-/
-        materialIx <- fromMaybe $ Mesh.material primitive
-        -- materialBS <- V.indexM accessorsBS $ Material.unMaterialIx materialIx
-        let mode = Mesh.mode primitive
-        let attributes = Mesh.attributes primitive
-        liftIO do
-            vao <- GL.genObjectName
-            -- TODO: pull all data (index and vertex) into the same buffer object.
-            -- you will need to find how to specify the index on the buffer.
-            -- actually I can keep indices on a separate buffer and keep all the attributes on
-            -- the same buffer.  I can also iterate over each of them and give them all 
-            -- attribute locations based on their name.  so "NORMAL" => attribLocation "normal"
-            indicesVBO <- GL.genObjectName :: IO GL.BufferObject
-            vertexVBO <- GL.genObjectName :: IO GL.BufferObject
+    --         GL.bindVertexArrayObject $= Just vao
 
-            GL.bindVertexArrayObject $= Just vao
+    --         GL.bindBuffer GL.ElementArrayBuffer $= Just indicesVBO
+    --         BS.useAsCString indicesBS $ \ptr -> do
+    --             -- TODO this ignores stride length, this could be bad lol
+    --             GL.bufferData GL.ElementArrayBuffer $= (fromIntegral $ BufferView.byteLength indicesBV, ptr `plusPtr` BufferView.byteOffset indicesBV, GL.StaticDraw) 
+    --         GL.bindBuffer GL.ElementArrayBuffer $= Nothing
 
-            GL.bindBuffer GL.ElementArrayBuffer $= Just indicesVBO
-            BS.useAsCString indicesBS $ \ptr -> do
-                -- TODO this ignores stride length, this could be bad lol
-                GL.bufferData GL.ElementArrayBuffer $= (fromIntegral $ BufferView.byteLength indicesBV, ptr `plusPtr` BufferView.byteOffset indicesBV, GL.StaticDraw) 
-            GL.bindBuffer GL.ElementArrayBuffer $= Nothing
+    --         GL.bindBuffer GL.ArrayBuffer $= Just vertexVBO
+    --         BS.useAsCString indicesBS $ \ptr -> do
+    --             GL.bufferData GL.ArrayBuffer $= (fromIntegral $ BS.length indicesBS, ptr, GL.StaticDraw)
 
-            GL.bindBuffer GL.ArrayBuffer $= Just vertexVBO
-            BS.useAsCString indicesBS $ \ptr -> do
-                GL.bufferData GL.ArrayBuffer $= (fromIntegral $ BS.length indicesBS, ptr, GL.StaticDraw)
+    --         let inner = \(name, accessorIx) -> do
+    --                 let program = error "unimplemented :-("
+    --                 let attribName = gltfNameToAttribName name
+    --                 -- TODO: appearantly this needs program, but it feels weird to supply it just for this
+    --                 loc <- liftIO $ GL.get $ GL.attribLocation program (T.unpack attribName)
+    --                 accessor <- fromMaybe $ V.indexM accessors (Accessor.unAccessorIx accessorIx)
 
-            let inner = \(name, accessorIx) -> do
-                let attribName = gltfNameToAttribName name
-                -- TODO: appearantly this needs program, but it feels weird to supply it just for this
-                loc <- liftIO $ GL.get $ GL.attribLocation program (T.unpack attribName)
-                accessor <- fromMaybe $ V.indexM (Accessor.unAccessorIx accessorIx)
+    --                 count <- fromMaybe $ (Accessor.count :: Accessor.Accessor -> Int) accessor
+    --                 bufferViewIx <- fromMaybe $ (Accessor.bufferView :: Accessor.Accessor -> Maybe BufferView.BufferViewIx) accessor
 
-                count <- fromMaybe $ Accessor.count accessor
-                bufferViewIx <- fromMaybe $ (Accessor.bufferView :: Accessor.Accessor -> Maybe BufferView.BufferViewIx) accessor
-
-                bufferView <- fromMaybe $ V.indexM  
-                GL.vertexAttribPointer loc $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ BS.length positionBS))
-
-
-            x <- forM (HM.toList attributes) inner
-
-            liftIO $ error "stop here"
+    --                 bufferView <- fromMaybe $ V.indexM bufferViews (BufferView.unBufferViewIx bufferViewIx)
+    --                 GL.vertexAttribPointer loc $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ count))
 
 
-            liftIO $ print vao
-            return vao
+    --         x <- forM (HM.toList attributes) inner
 
-    liftIO $ print meshes
-    return $ V.concat $ V.toList meshes
+    --         liftIO $ error "stop here"
 
-loadTextures :: GLTF.GlTF -> String -> IO (Either String (V.Vector GL.TextureObject))
+
+    --         liftIO $ print vao
+    --         return vao
+
+    -- liftIO $ print meshes
+    -- return $ V.concat $ V.toList meshes
+
+loadTextures :: GLTF -> String -> IO (Either String (V.Vector GL.TextureObject))
 loadTextures model root = runExceptT do
-    texObjs <- fromMaybe $ GLTF.textures model
-    imgObjs <- fromMaybe $ GLTF.images model
-    textures <- forM imgObjs $ \img -> do
-        URI.URI uri <- fromMaybe $ Image.uri img
-        let path = root </> T.unpack uri
+    texObjs <- fromMaybe $ model ^. E.textures
+    imgObjs <- fromMaybe $ model ^. images
+    texs <- forM imgObjs $ \img -> do
+        uri' <- fromMaybe $ img ^. uri
+        let path = root </> T.unpack uri'
         (obj, _size) <- liftIO $ loadTexture path
         return obj
 
     liftIO $ print texObjs
-    return textures
+    return texs
 
 initAssets :: IO Assets
 initAssets = do
