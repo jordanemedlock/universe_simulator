@@ -1,13 +1,12 @@
-module Engine.Vector
-( translationMatrix, scaleMatrix, perspectiveMatrix, lookAtMatrix, eye4
-
-) where
+module Engine.Vector where
 
 
 import qualified Data.Matrix as M
-import Graphics.Rendering.OpenGL hiding (lookAt, perspective)
+import Graphics.Rendering.OpenGL hiding (lookAt, perspective, position)
 import qualified Linear as L
 import Data.Foldable
+import Engine.Types
+import Control.Lens
 
 -- | Create an OpenGL matrix from the Matrix
 toGLMatrix  :: MatrixComponent a
@@ -61,6 +60,20 @@ eye4 = toGLMatrix $ M.fromList 4 4
         , 0.0, 0.0, 1.0, 0.0
         , 0.0, 0.0, 0.0, 1.0
         ]
+
+        
+rotationMatrix :: Rotation Float -> L.M33 Float
+rotationMatrix (QuaternionRotation quat) = L.fromQuaternion quat
+rotationMatrix (EulerRotation (L.V3 x y z)) = L.fromQuaternion $ qx * qy * qz
+    where
+        qx = L.axisAngle (L.V3 1 0 0) (degToRad x)
+        qy = L.axisAngle (L.V3 0 1 0) (degToRad y)
+        qz = L.axisAngle (L.V3 0 0 1) (degToRad z)
+        degToRad = (*pi).(/180)
+
+transformationMatrix :: Transform Float -> L.M44 Float
+transformationMatrix trans = L.mkTransformationMat (rotationMatrix $ trans^.rotation) $ trans^.position
+
 -- -- | Creates a 4x4 transform matrix representing a rotation 
 -- rotationMat2D   :: Float -- ^ Rotation in rads
 --                 -> M.Matrix Float
