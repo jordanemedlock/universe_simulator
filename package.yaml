@@ -71,6 +71,11 @@ executables:
     main: Main.hs
     dependencies:
     - universe-simulator
+  ecs:
+    source-dirs: examples/ecs
+    main: Main.hs
+    dependencies:
+    - universe-simulator
     
 ghc-options:
 - -threaded

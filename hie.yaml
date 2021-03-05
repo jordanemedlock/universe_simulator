@@ -12,3 +12,5 @@ cradle:
       component: "universe-simulator:earth-sphere"
     - path: "examples/textured-box"
       component: "universe-simulator:textured-box"
+    - path: "examples/ecs"
+      component: "universe-simulator:ecs"
