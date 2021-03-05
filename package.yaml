@@ -8,7 +8,6 @@ copyright:           "2020 Author name here"
 
 extra-source-files:
 - README.md
-- ChangeLog.md
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -35,6 +34,7 @@ dependencies:
 - vector
 - transformers
 - lens
+- directory
 
 library:
   source-dirs: engine
@@ -51,6 +51,8 @@ executables:
   blank-window:
     source-dirs: examples/blank-window
     main: Main.hs
+    dependencies:
+    - universe-simulator
   box:
     source-dirs: examples/box
     main: Main.hs
