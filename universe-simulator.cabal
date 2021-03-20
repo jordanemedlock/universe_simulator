@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8a7267eefa1f233e8a00e21a29804cdcf072e8d38fac8081f4c700a9dbda651f
+-- hash: 334b1f50187b322ead2543c5cdde2d74c768aca917af4389baef9c7a8492434f
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -53,7 +53,7 @@ library
     , directory
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
-    , lens
+    , lens >=4.18 && <5
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -81,7 +81,7 @@ executable blank-window
     , directory
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
-    , lens
+    , lens >=4.18 && <5
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -110,7 +110,7 @@ executable box
     , directory
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
-    , lens
+    , lens >=4.18 && <5
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -139,7 +139,7 @@ executable ecs
     , directory
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
-    , lens
+    , lens >=4.18 && <5
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq
@@ -149,12 +149,12 @@ executable ecs
     , vector
   default-language: Haskell2010
 
-executable textured-box
+executable text
   main-is: Main.hs
   other-modules:
       Paths_universe_simulator
   hs-source-dirs:
-      examples/textured-box
+      examples/text
   default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports -ddump-splices
   build-depends:
@@ -168,7 +168,7 @@ executable textured-box
     , directory
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
-    , lens
+    , lens >=4.18 && <5
     , linear
     , matrix >=0.3 && <0.4
     , raw-strings-qq

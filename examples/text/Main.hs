@@ -20,6 +20,7 @@ import Apecs hiding (($=), asks, ask)
 import qualified Apecs
 import Apecs.TH
 import System.Exit
+import Control.Lens
 import Data.Maybe (fromMaybe)
 
 
@@ -31,6 +32,7 @@ data Event = KeyEvent GLFW.Key Int GLFW.KeyState GLFW.ModifierKeys
 newtype Pos = Pos (V3 Float) deriving Show
 newtype Rot = Rot (Either (V3 Float) (Quaternion Float)) deriving Show
 newtype Scale = Scale (V3 Float) deriving Show
+newtype Size2D = Size2D (V2 Float) deriving Show
 data CamRot = CamRot Float Float deriving Show
 
 newtype Texture = Texture GL.TextureObject deriving Show
@@ -45,6 +47,11 @@ data Orbit = Orbit { rotation :: Float
                    , radius :: Float
                    } deriving Show
 
+data TextBox = TextBox { strings :: [String]
+                       , textFont :: Entity
+                       , textColor :: V4 Float
+                       , textSize :: Float
+                       } deriving Show
 
 data Earth = Earth deriving Show
 instance Component Earth where type Storage Earth = Unique Earth
@@ -71,9 +78,9 @@ instance Semigroup GameSettings where (<>) = const
 instance Monoid GameSettings where mempty = GameSettings (0.1, 0.01)
 instance Component GameSettings where type Storage GameSettings = Global GameSettings
 
-makeMapComponents [ ''Pos, ''Rot, ''Texture, ''Shader, ''Orbit, ''Mesh, ''CamRot, ''Scale ]
-makeWorld "World" [ ''Pos, ''Rot, ''Texture, ''Shader, ''CamRot, ''Scale
-                  , ''Orbit, ''Mesh, ''Earth, ''Moon
+makeMapComponents [ ''Pos, ''Rot, ''Texture, ''Shader, ''Orbit, ''Mesh, ''CamRot, ''Scale, ''Font, ''TextBox ]
+makeWorld "World" [ ''Pos, ''Rot, ''Texture, ''Shader, ''CamRot, ''Scale, ''Font
+                  , ''Orbit, ''Mesh, ''Earth, ''Moon, ''TextBox
                   , ''Camera, ''GameState, ''GameSettings, ''CursorPos
                   ]
 
@@ -85,6 +92,8 @@ main = do
 
     when debug $ putStrLn "Initiating window"
     window <- initWindow (V2 1920 1080) "Camera movement example"
+
+    -- GL.polygonMode $= (GL.Line, GL.Line)
 
     runWith world $ do
 
@@ -154,28 +163,38 @@ initialize :: System World ()
 initialize = do
     (earthTex, _) <- loadTexture "resources/textures/8k_earth_daymap.png"
     (moonTex, _) <- loadTexture "resources/textures/8k_moon.png"
-    eprogram <- loadShader "resources/shaders/lighting"
-    case eprogram of
-        Left x -> error x
-        Right program -> do
-            sphereMesh <- createSphereAsset 20
+    program <- either error id <$> loadShader "resources/shaders/lighting"
+    glyph <- either error id <$> loadShader "resources/shaders/glyph"
+    font <- loadFont "resources/fonts/Inconsolata.ttf" 48 glyph
 
-            cameraEty <- newEntity (Camera, Pos $ V3 2 2 2, CamRot 0 0)
-            earthEty <- newEntity ( Earth
-                                , Pos $ V3 0 0 0, Rot $ Left $ V3 (-90) 0 0, Scale $ V3 1 1 1
-                                , Texture earthTex, Shader program, Mesh sphereMesh
-                                , Orbit 0 0 0.1 0 (V3 0 0 0) 0
-                                )
-            moonEty <- newEntity  ( Moon
-                                , Pos $ V3 10 0 0, Rot $ Left $ V3 0 0 0, Scale $ V3 0.1 0.1 0.1
-                                , Texture moonTex, Shader program, Mesh sphereMesh
-                                , Orbit 0 0 0.1 0.1 (V3 0 0 0) 10
-                                )
+    
 
-            return ()
+    withShader glyph do
+        "projection" $== ortho 0 1920 1080 0 (-1) (1 :: Float)
 
-draw :: System World ()
-draw = cmapM_ $ \(Camera, Pos camPos, CamRot pitch yaw) -> do
+
+    sphereMesh <- createSphereAsset 20
+
+    cameraEty <- newEntity (Camera, Pos $ V3 2 2 2, CamRot 0 0)
+    earthEty <- newEntity ( Earth
+                        , Pos $ V3 0 0 0, Rot $ Left $ V3 (-90) 0 0, Scale $ V3 1 1 1
+                        , Texture earthTex, Shader program, Mesh sphereMesh
+                        , Orbit 0 0 0.1 0 (V3 0 0 0) 0
+                        )
+    moonEty <- newEntity  ( Moon
+                        , Pos $ V3 10 0 0, Rot $ Left $ V3 0 0 0, Scale $ V3 0.1 0.1 0.1
+                        , Texture moonTex, Shader program, Mesh sphereMesh
+                        , Orbit 0 0 0.1 0.1 (V3 0 0 0) 10
+                        )
+    fontEty <- newEntity font
+    hudEty <- newEntity ( TextBox ["Hello World!"] fontEty (V4 1 1 1 1) 0.5, Pos $ V3 10 30 0 )
+
+    return ()
+
+draw = drawObjects >> drawText
+
+drawObjects :: System World ()
+drawObjects = cmapM_ $ \(Camera, Pos camPos, CamRot pitch yaw) -> do
     cmapM_ $ \(Texture tex, Shader sdr, Mesh mesh, Pos pos, Rot erot, mscale) -> do
         let view = lookAt camPos (camPos + cameraForward pitch yaw) (V3 0 1 0)
         let proj = perspective (70 :: Float) (16.0/9) 0.1 100.0
@@ -200,6 +219,15 @@ draw = cmapM_ $ \(Camera, Pos camPos, CamRot pitch yaw) -> do
             liftIO $ GL.textureBinding GL.Texture2D $= Just tex
 
             drawMeshAsset mesh -- size of the cube array
+
+drawText :: System World ()
+drawText = cmapM_ \(TextBox strings fontEty color size, Pos pos) -> do
+    font <- get fontEty
+
+    forM_ (zip [0..] strings) $ \(row, str) -> do
+        -- liftIO $ putStrLn $ "Drawing string " <> show str
+        renderString font str (pos^._xy + V2 0 (realToFrac row * 24)) size color
+    
 
 moveCamera :: (MonadIO m) => (Float -> Float -> V3 Float) -> Float -> SystemT World m ()
 moveCamera dir vel = cmap \(Camera, Pos pos, CamRot pitch yaw, GameSettings {cameraSpeed=(_, speed)}) ->

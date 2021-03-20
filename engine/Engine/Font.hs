@@ -15,6 +15,8 @@ import Foreign.Marshal.Array (newArray)
 import Control.Monad (foldM_)
 import Control.Monad.IO.Class
 import Engine.Shader
+import Engine.Types ()
+import Linear
 
 -- | 'Character' data type for fonts, contains everthing to render a 'Char'
 data Character = 
@@ -33,11 +35,12 @@ data Font =
             }
 
 -- | Load a font from a TTF file 
-loadFont    :: String   -- ^ Filename
+loadFont    :: (MonadIO m)
+            => String   -- ^ Filename
             -> Int      -- ^ Font size/height in pixels
             -> GL.Program   -- ^ Glyph shader to render the font
-            -> IO Font
-loadFont name height shader = ft_With_FreeType $ \ft -> 
+            -> m Font
+loadFont name height shader = liftIO $ ft_With_FreeType $ \ft -> 
     ft_With_Face ft name 0 $ \face -> do
 
         GL.rowAlignment GL.Unpack $= 1
@@ -51,8 +54,8 @@ loadFont name height shader = ft_With_FreeType $ \ft ->
         return $ Font chars shader vao vbo
 
 -- | Load the VAO and VBO objects and sets them up
-loadFontVAOVBO :: IO (GL.VertexArrayObject, GL.BufferObject)
-loadFontVAOVBO = do
+loadFontVAOVBO :: (MonadIO m) => m (GL.VertexArrayObject, GL.BufferObject)
+loadFontVAOVBO = liftIO do
     vao <- GL.genObjectName :: IO GL.VertexArrayObject
     vbo <- GL.genObjectName :: IO GL.BufferObject
 
@@ -70,10 +73,11 @@ loadFontVAOVBO = do
     return (vao, vbo)
 
 -- | Load the font into a 'Character' object
-loadChar    :: FT_Face -- ^ FreeType font object
+loadChar    :: (MonadIO m) 
+            => FT_Face -- ^ FreeType font object
             -> Int -- ^ ASCII character code 
-            -> IO Character
-loadChar pFace c = do
+            -> m Character
+loadChar pFace c = liftIO do
     ft_Load_Char pFace (fromIntegral c) FT_LOAD_RENDER
 
     texId <- GL.genObjectName :: IO GL.TextureObject
@@ -99,19 +103,17 @@ loadChar pFace c = do
 renderString    :: (MonadIO m) 
                 => Font -- ^ Font to used to render string
                 -> String -- ^ String to render
-                -> GL.Vector2 Float -- ^ Render position
+                -> V2 Float -- ^ Render position
                 -> Float -- ^ Scale relative to loaded font size
-                -> GL.Color4 Float -- ^ Font color
+                -> V4 Float -- ^ Font color
                 -> m ()
-renderString font@(Font chars shader vao vbo) string pos scale color = liftIO do
+renderString font@(Font chars shader vao vbo) string (V2 x y) scale color = liftIO do
 
     withShader shader do
         "textColor" $== color
 
         liftIO $ GL.activeTexture $= GL.TextureUnit 0
         liftIO $ GL.bindVertexArrayObject $= Just vao
-
-        let (GL.Vector2 x y) = pos
 
         liftIO $ foldM_ (\x c -> renderCharacter font y scale (chars !! fromEnum c) x) x string
 
@@ -120,13 +122,14 @@ renderString font@(Font chars shader vao vbo) string pos scale color = liftIO do
 
 
 -- | Render character to the screen
-renderCharacter :: Font -- ^ Font used
+renderCharacter :: (MonadIO m) 
+                => Font -- ^ Font used
                 -> Float -- ^ y position of the character
                 -> Float -- ^ Scale
                 -> Character -- ^ Character to render
                 -> Float -- ^ x position to render at
-                -> IO Float -- ^ Advanced x position after render
-renderCharacter (Font chars _ vao vbo) y scale (Character tex cSize bear adv) x = do
+                -> m Float -- ^ Advanced x position after render
+renderCharacter (Font chars _ vao vbo) y scale (Character tex cSize bear adv) x = liftIO do
 
     let (GL.TextureSize2D sX' sY') = cSize
     let (sX, sY) = (fromIntegral sX', fromIntegral sY')
