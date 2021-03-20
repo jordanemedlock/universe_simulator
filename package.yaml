@@ -33,9 +33,10 @@ dependencies:
 - time 
 - vector
 - transformers
-- lens
+- lens >=4.18 && <5
 - directory
 - apecs
+- freetype2 >=0.2 && <0.3
 
 library:
   source-dirs: engine
@@ -59,11 +60,11 @@ executables:
     main: Main.hs
     dependencies:
     - universe-simulator
-  textured-box:
-    source-dirs: examples/textured-box
-    main: Main.hs
-    dependencies:
-    - universe-simulator
+  # textured-box:
+  #   source-dirs: examples/textured-box
+  #   main: Main.hs
+  #   dependencies:
+  #   - universe-simulator
   # earth-sphere:
   #   source-dirs: examples/earth-sphere
   #   main: Main.hs
@@ -76,6 +77,11 @@ executables:
   #   - universe-simulator
   ecs:
     source-dirs: examples/ecs
+    main: Main.hs
+    dependencies:
+    - universe-simulator
+  text:
+    source-dirs: examples/text
     main: Main.hs
     dependencies:
     - universe-simulator
