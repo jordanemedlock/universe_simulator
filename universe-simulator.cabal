@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b9f3968a81d5174722add82143329b54b6716be1591757e6ff5db7679ae6184a
+-- hash: 6792ecce14b300a0ec532f0662545d1edea781e8511f79fc961709e881029c77
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -45,6 +45,7 @@ library
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
     , OpenGL >=3.0 && <4
+    , apecs
     , base >=4.7 && <5
     , bindings-GLFW >=3.3 && <4
     , bytestring >=0.10 && <1
@@ -72,6 +73,7 @@ executable blank-window
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
     , OpenGL >=3.0 && <4
+    , apecs
     , base >=4.7 && <5
     , bindings-GLFW >=3.3 && <4
     , bytestring >=0.10 && <1
@@ -100,63 +102,7 @@ executable box
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
     , OpenGL >=3.0 && <4
-    , base >=4.7 && <5
-    , bindings-GLFW >=3.3 && <4
-    , bytestring >=0.10 && <1
-    , directory
-    , filepath >=1.4 && <2
-    , freetype2 >=0.2 && <0.3
-    , lens
-    , linear
-    , matrix >=0.3 && <0.4
-    , raw-strings-qq
-    , time
-    , transformers
-    , universe-simulator
-    , vector
-  default-language: Haskell2010
-
-executable camera-movement
-  main-is: Main.hs
-  other-modules:
-      Types
-      Paths_universe_simulator
-  hs-source-dirs:
-      examples/camera-movement
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports -ddump-splices
-  build-depends:
-      GLFW-b >=3.3 && <4
-    , JuicyPixels >=3.3 && <4
-    , OpenGL >=3.0 && <4
-    , base >=4.7 && <5
-    , bindings-GLFW >=3.3 && <4
-    , bytestring >=0.10 && <1
-    , directory
-    , filepath >=1.4 && <2
-    , freetype2 >=0.2 && <0.3
-    , lens
-    , linear
-    , matrix >=0.3 && <0.4
-    , raw-strings-qq
-    , time
-    , transformers
-    , universe-simulator
-    , vector
-  default-language: Haskell2010
-
-executable earth-sphere
-  main-is: Main.hs
-  other-modules:
-      Paths_universe_simulator
-  hs-source-dirs:
-      examples/earth-sphere
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports -ddump-splices
-  build-depends:
-      GLFW-b >=3.3 && <4
-    , JuicyPixels >=3.3 && <4
-    , OpenGL >=3.0 && <4
+    , apecs
     , base >=4.7 && <5
     , bindings-GLFW >=3.3 && <4
     , bytestring >=0.10 && <1
@@ -176,7 +122,6 @@ executable earth-sphere
 executable ecs
   main-is: Main.hs
   other-modules:
-      Types
       Paths_universe_simulator
   hs-source-dirs:
       examples/ecs
@@ -186,9 +131,11 @@ executable ecs
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
     , OpenGL >=3.0 && <4
+    , apecs
     , base >=4.7 && <5
     , bindings-GLFW >=3.3 && <4
     , bytestring >=0.10 && <1
+    , directory
     , filepath >=1.4 && <2
     , freetype2 >=0.2 && <0.3
     , lens
@@ -213,6 +160,7 @@ executable textured-box
       GLFW-b >=3.3 && <4
     , JuicyPixels >=3.3 && <4
     , OpenGL >=3.0 && <4
+    , apecs
     , base >=4.7 && <5
     , bindings-GLFW >=3.3 && <4
     , bytestring >=0.10 && <1

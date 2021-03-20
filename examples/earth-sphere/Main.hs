@@ -97,41 +97,13 @@ void main()
 }
 |]
 
-planeVertexList :: Int -> Int -> [(Float, Float, Float)]
-planeVertexList rows cols = concat [ [ (fromIntegral r / fromIntegral (rows-1), fromIntegral c / fromIntegral (cols-1), 0.0) 
-                                     | c <- [0..cols-1]
-                                     ] 
-                                   | r <- [0..rows-1]
-                                   ]
-
-planeIndexList :: Int -> Int -> [Int]
-planeIndexList rows cols = concat $ concat  [ [ (if r == 0           then [] else [ c + r * cols,       c + r * cols + 1,       c + (r + 1) * cols ])
-                                                ++
-                                                (if r == (rows-2)    then [] else [ c + r * cols + 1,   c + (r + 1) * cols + 1, c + (r + 1) * cols ])
-                                                | c <- [0..cols-2]
-                                                ]
-                                            | r <- [0..rows-2]
-                                            ]
-
 fullPlaneVertexList :: Int -> Int -> [Float]
 fullPlaneVertexList rows cols = concat [ [ x, y, z, 0, 0, 1.0, y, x ]
                                        | (x, y, z) <- planeVertexList rows cols
                                        ]
 
-sphereVertexList :: Int -> [(Float,Float,Float)] -- list of rows of vertices
-sphereVertexList n = (\(x, y, z) -> (sin (pi*x) * cos (2*pi*y), sin (pi*x) * sin (2*pi*y), cos (pi*x))) <$> planeVertexList n (n*2)
-
-
 sphereIndexList :: Int -> [Int]
 sphereIndexList n = planeIndexList n (n*2)
-
-fullSphereVertexList :: Int -> [Float]
-fullSphereVertexList n = concat [ [ x, y, z, x, y, z, u, v ] 
-                                | (i, (x, y, z)) <- zip [0..] $ sphereVertexList n
-                                , let (iv, iu) = i `divMod` (n*2)
-                                , let fn = fromIntegral n
-                                , let (u, v) = (fromIntegral iu / fn, fromIntegral iv / fn)
-                                ]
 
 createCube :: IO GL.VertexArrayObject
 createCube = do

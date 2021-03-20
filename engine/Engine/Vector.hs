@@ -62,17 +62,13 @@ eye4 = toGLMatrix $ M.fromList 4 4
         ]
 
         
-rotationMatrix :: Rotation Float -> L.M33 Float
-rotationMatrix (QuaternionRotation quat) = L.fromQuaternion quat
-rotationMatrix (EulerRotation (L.V3 x y z)) = L.fromQuaternion $ qx * qy * qz
+rotationMatrix :: L.V3 Float -> L.M33 Float
+rotationMatrix (L.V3 x y z) = L.fromQuaternion $ qx * qy * qz
     where
         qx = L.axisAngle (L.V3 1 0 0) (degToRad x)
         qy = L.axisAngle (L.V3 0 1 0) (degToRad y)
         qz = L.axisAngle (L.V3 0 0 1) (degToRad z)
         degToRad = (*pi).(/180)
-
-transformationMatrix :: Transform Float -> L.M44 Float
-transformationMatrix trans = L.mkTransformationMat (rotationMatrix $ trans^.rotation) $ trans^.position
 
 -- -- | Creates a 4x4 transform matrix representing a rotation 
 -- rotationMat2D   :: Float -- ^ Rotation in rads
