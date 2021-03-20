@@ -36,6 +36,7 @@ dependencies:
 - lens
 - directory
 - apecs
+- freetype2 >=0.2 && <0.3
 
 library:
   source-dirs: engine

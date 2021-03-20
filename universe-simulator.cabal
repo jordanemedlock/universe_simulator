@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6792ecce14b300a0ec532f0662545d1edea781e8511f79fc961709e881029c77
+-- hash: 8a7267eefa1f233e8a00e21a29804cdcf072e8d38fac8081f4c700a9dbda651f
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -29,6 +29,7 @@ library
       Engine
   other-modules:
       Engine.Camera
+      Engine.Font
       Engine.Mesh
       Engine.Shader
       Engine.Texture
