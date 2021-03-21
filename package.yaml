@@ -85,6 +85,11 @@ executables:
     main: Main.hs
     dependencies:
     - universe-simulator
+  hack:
+    source-dirs: examples/hack
+    main: Main.hs
+    dependencies:
+    - universe-simulator
     
 ghc-options:
 - -threaded
