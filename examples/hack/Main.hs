@@ -3,6 +3,8 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE CPP                   #-}
+{-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE FlexibleContexts      #-}
 module Main where
 
@@ -10,7 +12,8 @@ import qualified Graphics.UI.GLFW as GLFW
 import qualified Graphics.Rendering.OpenGL as GL
 import Graphics.Rendering.OpenGL (($=))
 import Data.Time (getCurrentTime, diffUTCTime)
-import Engine hiding (Camera)
+import Engine
+import Engine.Apecs
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Reader
 import Linear
@@ -19,25 +22,11 @@ import Control.Monad
 import Apecs hiding (($=), asks, ask)
 import qualified Apecs
 import Apecs.TH
+import Apecs.Components (Filter(..))
 import System.Exit
 import Control.Lens
 import Data.Maybe (fromMaybe)
 
-
-data Event = KeyEvent GLFW.Key Int GLFW.KeyState GLFW.ModifierKeys
-           | CursorEvent Double Double
-           deriving (Show)
-
-
-newtype Pos = Pos (V3 Float) deriving Show
-newtype Rot = Rot (Either (V3 Float) (Quaternion Float)) deriving Show
-newtype Scale = Scale (V3 Float) deriving Show
-newtype Size2D = Size2D (V2 Float) deriving Show
-data CamRot = CamRot Float Float deriving Show
-
-newtype Texture = Texture GL.TextureObject deriving Show
-newtype Shader = Shader GL.Program deriving Show
-newtype Mesh = Mesh MeshAsset deriving Show
 
 data Orbit = Orbit { rotation :: Float
                    , revolution :: Float
@@ -47,11 +36,7 @@ data Orbit = Orbit { rotation :: Float
                    , radius :: Float
                    } deriving Show
 
-data TextBox = TextBox { strings :: [String]
-                       , textFont :: Entity
-                       , textColor :: V4 Float
-                       , textSize :: Float
-                       } deriving Show
+data Hud = Hud deriving Show
 
 data Earth = Earth deriving Show
 instance Component Earth where type Storage Earth = Unique Earth
@@ -59,10 +44,7 @@ instance Component Earth where type Storage Earth = Unique Earth
 data Moon = Moon deriving Show
 instance Component Moon where type Storage Moon = Unique Moon
 
-data Camera = Camera deriving Show
-instance Component Camera where type Storage Camera = Unique Camera
-
-data GameState = Paused | Playing | Closed deriving (Show, Eq, Enum)
+data GameState = Paused | Playing | Closed | Terminal deriving (Show, Eq, Enum)
 instance Semigroup GameState where (<>) = const
 instance Monoid GameState where mempty = Playing
 instance Component GameState where type Storage GameState = Global GameState
@@ -72,26 +54,28 @@ instance Semigroup CursorPos where (CursorPos x1 y1) <> (CursorPos x2 y2) = Curs
 instance Monoid CursorPos where mempty = CursorPos 0 0
 instance Component CursorPos where type Storage CursorPos = Global CursorPos
 
-
-data ConsoleHistory = ConsoleHistory { currentCommand :: String
-                                     , commandHistory :: [String]
-                                     } deriving (Show, Eq)
-instance Semigroup ConsoleHistory where (<>) = const
-instance Monoid ConsoleHistory where mempty = ConsoleHistory "" []
-instance Component ConsoleHistory where type Storage ConsoleHistory = Global ConsoleHistory
-
 data GameSettings = GameSettings { cameraSpeed :: (Float, Float) -- (cursor, keyboard)
+                                 , screenSize :: V2 Int
+                                 , debug :: Bool
                                  } deriving Show
 instance Semigroup GameSettings where (<>) = const
-instance Monoid GameSettings where mempty = GameSettings (0.1, 0.01)
+instance Monoid GameSettings where mempty = GameSettings (0.1, 0.01) (V2 1920 1080) True
 instance Component GameSettings where type Storage GameSettings = Global GameSettings
 
-makeMapComponents [ ''Pos, ''Rot, ''Texture, ''Shader, ''Orbit, ''Mesh, ''CamRot, ''Scale, ''Font, ''TextBox ]
-makeWorld "World" [ ''Pos, ''Rot, ''Texture, ''Shader, ''CamRot, ''Scale, ''Font
-                  , ''Orbit, ''Mesh, ''Earth, ''Moon, ''TextBox
-                  , ''Camera, ''GameState, ''GameSettings, ''CursorPos
-                  , ''ConsoleHistory
+#define MAP_COMPS [ ''Pos, ''Rot, ''Texture, ''Shader, ''Orbit, ''Mesh, ''CamRot, ''Pos2D \
+                  , ''Scale, ''Font, ''TextBox, ''Hud, ''Console, ''Command, ''FormControl \
+                  , ''TextInput, ''Size2D, ''Hidden, ''Focus \
                   ]
+#define NON_MAP_COMPS [ ''Earth, ''Moon, ''Camera, ''GameState, ''GameSettings, ''CursorPos \
+                      , ''TerminalInput \
+                      ]
+
+makeMapComponents MAP_COMPS
+makeWorld "World" $ MAP_COMPS <> NON_MAP_COMPS
+
+debugLog msg = do
+    settings <- get global
+    when (debug settings) $ liftIO $ putStrLn msg
 
 main :: IO ()
 main = do
@@ -99,74 +83,23 @@ main = do
     when debug $ putStrLn "Initiating world"
     world <- initWorld
 
-    when debug $ putStrLn "Initiating window"
-    window <- initWindow (V2 1920 1080) "Camera movement example"
-
     -- GL.polygonMode $= (GL.Line, GL.Line)
 
     runWith world $ do
 
-        liftIO $ when debug $ putStrLn "Initiating systems"
+        settings <- get global
+
+        debugLog "Initiating window"
+        window <- initWindow (screenSize settings) "Camera movement example"
+
+        debugLog "Initiating systems"
         initialize
 
-        liftIO $ when debug $ putStrLn "playing game"
+        debugLog "playing game"
         play window draw handle step
 
     GLFW.terminate
 
-play :: GLFW.Window
-     -> System w ()
-     -> (Event -> System w ())
-     -> (Double -> System w ())
-     -> System w ()
-play win draw handle step = do
-    w <- Apecs.ask
-    let draw' = runSystem draw
-    let handle' event = runSystem $ handle event >> Apecs.ask
-    let step' delta = runSystem $ step delta >> Apecs.ask
-    liftIO $ playIO w win draw' handle' step'
-
-playIO :: w
-       -> GLFW.Window
-       -> (w -> IO ())
-       -> (Event -> w -> IO w)
-       -> (Double -> w -> IO w)
-       -> IO ()
-playIO world win draw handle step = do
-    let debug = True
-
-    worldRef <- newIORef world
-
-
-    GLFW.setCursorInputMode win GLFW.CursorInputMode'Disabled
-    GLFW.setKeyCallback win $ Just $ \w k i ks ms -> do
-        world' <- readIORef worldRef
-        world'' <- handle (KeyEvent k i ks ms) world'
-        writeIORef worldRef world''
-    GLFW.setCursorPosCallback win $ Just $ \w x y -> do
-        world' <- readIORef worldRef
-        world'' <- handle (CursorEvent x y) world'
-        writeIORef worldRef world''
-
-    prevTime <- getCurrentTime
-    let loop prevTime = do
-            GLFW.pollEvents
-
-            GL.clearColor $= GL.Color4 0 0 0 1
-            GL.clear [GL.ColorBuffer, GL.DepthBuffer]
-
-
-            newTime <- getCurrentTime
-            let delta = realToFrac $ diffUTCTime newTime prevTime
-            world' <- readIORef worldRef
-            world'' <- step delta world'
-            draw world''
-            writeIORef worldRef world''
-
-            GLFW.swapBuffers win
-            shouldClose <- GLFW.windowShouldClose win
-            unless shouldClose $ loop newTime
-    loop prevTime
 
 initialize :: System World ()
 initialize = do
@@ -176,10 +109,10 @@ initialize = do
     glyph <- either error id <$> loadShader "resources/shaders/glyph"
     font <- loadFont "resources/fonts/Inconsolata.ttf" 48 glyph
 
-    
+    (V2 w h) <- (realToFrac <$>) . screenSize <$> get global
 
     withShader glyph do
-        "projection" $== ortho 0 1920 1080 0 (-1) (1 :: Float)
+        "projection" $== ortho 0 w h 0 (-1) (1 :: Float)
 
 
     sphereMesh <- createSphereAsset 20
@@ -196,19 +129,25 @@ initialize = do
                         , Orbit 0 0 0.1 0.1 (V3 0 0 0) 10
                         )
     fontEty <- newEntity font
-    hudEty <- newEntity ( TextBox ["Hello World!"] fontEty (V4 1 1 1 1) 0.5, Pos $ V3 10 30 0 )
+    hudEty <- newEntity ( Hud, TextBox "Hello World!" fontEty (V4 1 1 1 1) 0.5, Pos2D $ V2 10 30 )
+    textInputEty <- newEntity ( TerminalInput
+                              , Console, FormControl, TextInput 0
+                              , TextBox "" fontEty (V4 1 1 1 1) 0.5
+                              , Pos2D $ V2 40 (h - 60), Size2D $ V2 (w - 80) 30
+                              , Command Nothing
+                              )
 
     return ()
 
 draw = do
     gameState <- get global
     case gameState of 
-        Console -> drawConsole
-        _ -> drawObjects >> drawText
+        Terminal -> drawTerminal
+        _ -> drawObjects (Filter @Mesh) >> drawTextBoxes (Hud)
 
-drawObjects :: System World ()
-drawObjects = cmapM_ $ \(Camera, Pos camPos, CamRot pitch yaw) -> do
-    cmapM_ $ \(Texture tex, Shader sdr, Mesh mesh, Pos pos, Rot erot, mscale) -> do
+drawObjects :: forall tag. (Get World IO tag, Members World IO tag) => tag -> System World ()
+drawObjects _ = cmapM_ $ \(Camera, Pos camPos, CamRot pitch yaw) -> do
+    cmapM_ $ \(_ :: tag, Texture tex, Shader sdr, Mesh mesh, Pos pos, Rot erot, mscale) -> do
         let view = lookAt camPos (camPos + cameraForward pitch yaw) (V3 0 1 0)
         let proj = perspective (70 :: Float) (16.0/9) 0.1 100.0
         let (Scale size) = fromMaybe (Scale $ V3 1 1 1) mscale
@@ -222,47 +161,49 @@ drawObjects = cmapM_ $ \(Camera, Pos camPos, CamRot pitch yaw) -> do
             "view"          $== view
             "projection"    $== proj
 
-            "objectColor"   $== color 1.0 0.5 0.3 1.0
-            "ambientColor"  $== color 1.0 1.0 1.0 1.0
+            "objectColor"   $== (V4 1.0 0.5 0.3 1.0 :: V4 Float)
+            "ambientColor"  $== (V4 1.0 1.0 1.0 1.0 :: V4 Float)
             "viewPos"       $== camPos
             "lightPos"      $== (V3 1.1 1.0 2.0 :: V3 Float)
-            "lightColor"    $== color 1.0 1.0 1.0 1.0
+            "lightColor"    $== (V4 1.0 1.0 1.0 1.0 :: V4 Float)
 
             liftIO $ GL.activeTexture $= GL.TextureUnit 0
             liftIO $ GL.textureBinding GL.Texture2D $= Just tex
 
             drawMeshAsset mesh -- size of the cube array
 
-drawText :: System World ()
-drawText = cmapM_ \(TextBox strings fontEty color size, Pos pos) -> do
-    font <- get fontEty
 
-    forM_ (zip [0..] strings) $ \(row, str) -> do
-        -- liftIO $ putStrLn $ "Drawing string " <> show str
-        renderString font str (pos^._xy + V2 0 (realToFrac row * 24)) size color
-    
-
-moveCamera :: (MonadIO m) => (Float -> Float -> V3 Float) -> Float -> SystemT World m ()
+moveCamera :: (Float -> Float -> V3 Float) -> Float -> System World ()
 moveCamera dir vel = cmap \(Camera, Pos pos, CamRot pitch yaw, GameSettings {cameraSpeed=(_, speed)}) ->
-    (Pos $ pos + dir pitch yaw ^* vel ^* speed)
+    Pos $ pos + dir pitch yaw ^* vel ^* speed
 
-handle :: (MonadIO m) => Event -> SystemT World m ()
-handle (KeyEvent GLFW.Key'Escape i ks mods) = liftIO exitSuccess
-handle (KeyEvent GLFW.Key'W i ks mods) = moveCamera cameraForward (1)
-handle (KeyEvent GLFW.Key'A i ks mods) = moveCamera cameraRight (-1)
-handle (KeyEvent GLFW.Key'S i ks mods) = moveCamera cameraForward (-1)
-handle (KeyEvent GLFW.Key'D i ks mods) = moveCamera cameraRight (1)
-handle (KeyEvent GLFW.Key'Q i ks mods) = moveCamera cameraUp (1)
-handle (KeyEvent GLFW.Key'E i ks mods) = moveCamera cameraUp (-1)
 
-handle (CursorEvent x y) = do
+
+handle :: Event -> System World ()
+handle event = do
+    textInput event
+    Apecs.get global >>= \case 
+        Playing -> playingInput event
+        Terminal -> terminalInput event (Apecs.set global Playing)
+        _ -> return ()
+
+
+playingInput :: Event -> System World ()
+playingInput (KeyEvent GLFW.Key'Slash i ks mods) = Apecs.set global Terminal >> initTerminal
+playingInput (KeyEvent GLFW.Key'Escape i GLFW.KeyState'Released mods) = liftIO exitSuccess
+playingInput (KeyEvent GLFW.Key'W i ks mods) = moveCamera cameraForward (1)
+playingInput (KeyEvent GLFW.Key'A i ks mods) = moveCamera cameraRight (-1)
+playingInput (KeyEvent GLFW.Key'S i ks mods) = moveCamera cameraForward (-1)
+playingInput (KeyEvent GLFW.Key'D i ks mods) = moveCamera cameraRight (1)
+playingInput (KeyEvent GLFW.Key'Q i ks mods) = moveCamera cameraUp (1)
+playingInput (KeyEvent GLFW.Key'E i ks mods) = moveCamera cameraUp (-1)
+playingInput (CursorEvent x y) = do
     (CursorPos px py, GameSettings {cameraSpeed=(speed, _)}) <- get global
 
     let dx = realToFrac (x - px) * speed
     let dy = realToFrac (py - y) * speed
     cmap \(Camera, CamRot pitch yaw) -> (Camera, CamRot (clamp (-89) 89 (pitch + dy)) (yaw + dx), CursorPos x y)
-
-handle _ = do
+playingInput _ = do
     return ()
 
 runOrbit :: Double -> System World ()
@@ -285,7 +226,7 @@ step delta = do
     gameState <- get global
     case gameState of
         Playing -> runOrbit delta
-        Console -> runConsole delta
+        Terminal -> runConsole delta
         _ -> return ()
 
 

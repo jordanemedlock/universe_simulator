@@ -5,6 +5,11 @@ import qualified Graphics.Rendering.OpenGL as GL
 import Graphics.Rendering.OpenGL (($=))
 import Control.Monad.IO.Class
 import Linear
+import Engine.Types
+import Engine.Events
+import Control.Monad
+import Data.IORef
+import Data.Time (getCurrentTime, diffUTCTime)
 
 errorCallback :: Show a => a -> [Char] -> IO ()
 errorCallback err msg = do
@@ -52,3 +57,36 @@ initWindow (V2 width height) title = liftIO do
         
                     return window
             
+
+playIO :: w
+       -> GLFW.Window
+       -> (w -> IO ())
+       -> (Event -> w -> IO w)
+       -> (Double -> w -> IO w)
+       -> IO ()
+playIO world win draw handle step = do
+    let debug = True
+
+    worldRef <- newIORef world
+    
+    initEventCallbacks win handle worldRef
+
+    prevTime <- getCurrentTime
+    let loop prevTime = do
+            GLFW.pollEvents
+
+            GL.clearColor $= GL.Color4 0 0 0 1
+            GL.clear [GL.ColorBuffer, GL.DepthBuffer]
+
+
+            newTime <- getCurrentTime
+            let delta = realToFrac $ diffUTCTime newTime prevTime
+            world' <- readIORef worldRef
+            world'' <- step delta world'
+            draw world''
+            writeIORef worldRef world''
+
+            GLFW.swapBuffers win
+            shouldClose <- GLFW.windowShouldClose win
+            unless shouldClose $ loop newTime
+    loop prevTime

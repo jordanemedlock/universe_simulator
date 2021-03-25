@@ -42,6 +42,7 @@ library:
   source-dirs: engine
   exposed-modules: 
   - Engine
+  - Engine.Apecs
   # dependencies:
   # - GLFW-b >=3.3 && <4
   # - OpenGL >=3.0 && <4
@@ -109,3 +110,4 @@ default-extensions:
 - BlockArguments
 - FlexibleInstances
 - ScopedTypeVariables
+- LambdaCase
