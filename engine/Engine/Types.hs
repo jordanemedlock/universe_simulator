@@ -3,38 +3,23 @@ module Engine.Types where
 
 import Linear
 import Graphics.Rendering.OpenGL hiding (Color)
+import qualified Graphics.UI.GLFW as GLFW
 import Data.Foldable
 import Control.Lens.TH
+import GHC.Int
 
+data MeshType = TriangleArray | ElementsArray deriving Show
 
-data Rotation a = EulerRotation
-    { _rotationEuler :: V3 a -- Euler angles in degrees (for funsies)
-    }
-    | QuaternionRotation
-    { _rotationQuaternion :: Quaternion a
-    } deriving (Show)
-makeFields ''Rotation
+data MeshAsset = MeshAsset { _meshAssetVao :: VertexArrayObject 
+                           , _meshAssetNumTris :: Int32
+                           , _meshAssetMeshType :: MeshType
+                           } deriving Show
+makeFields ''MeshAsset
 
-data Transform a = Transform
-    { _transformRotation :: Rotation a 
-    , _transformPosition :: V3 a
-    } deriving (Show)
-makeFields ''Transform
-
-data Camera = Camera 
-    { _cameraPitch :: Float
-    , _cameraYaw :: Float
-    , _cameraPosition :: V3 Float 
-    , _cameraFov :: Float 
-    , _cameraRatio :: Float
-    , _cameraNear :: Float
-    , _cameraFar :: Float
-    } deriving (Show)
-makeFields ''Camera
-
-type Color = V4 Float
-color :: Float -> Float -> Float -> Float -> Color
-color = V4
+data Event =  KeyEvent GLFW.Key Int GLFW.KeyState GLFW.ModifierKeys
+            | CursorEvent Double Double 
+            | CharEvent Char 
+            deriving Show
 
 instance UniformComponent a => Uniform (V1 a) where 
     uniform loc = makeStateVar getter setter

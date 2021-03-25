@@ -11,14 +11,8 @@ import Control.Monad.IO.Class
 import Engine.Shader
 import GHC.Int
 import GHC.Word
+import Engine.Types
 
-data MeshType = TriangleArray | ElementsArray deriving Show
-
-data MeshAsset = MeshAsset { _meshAssetVao :: GL.VertexArrayObject 
-                           , _meshAssetNumTris :: Int32
-                           , _meshAssetMeshType :: MeshType
-                           } deriving Show
-makeFields ''MeshAsset
 
 createCubeAsset :: MonadIO m => m MeshAsset
 createCubeAsset = liftIO do
