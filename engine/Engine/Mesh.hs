@@ -12,7 +12,7 @@ import Engine.Shader
 import GHC.Int
 import GHC.Word
 import Engine.Types
-
+import Linear
 
 createCubeAsset :: MonadIO m => m MeshAsset
 createCubeAsset = liftIO do
@@ -77,6 +77,8 @@ createCubeAsset = liftIO do
 drawMeshAsset :: MonadIO m => MeshAsset -> m ()
 drawMeshAsset (MeshAsset vao numTris TriangleArray) = liftIO do
     withVAO vao $ liftIO $ GL.drawArrays GL.Triangles 0 numTris
+drawMeshAsset (MeshAsset vao numTris LinesArray) = liftIO do
+    withVAO vao $ liftIO $ GL.drawArrays GL.Lines 0 numTris
 drawMeshAsset (MeshAsset vao numTris ElementsArray) = liftIO do
     withVAO vao $ liftIO $ GL.drawElements GL.Triangles numTris GL.UnsignedInt nullPtr
 
@@ -97,7 +99,7 @@ planeIndexList rows cols = concat $ concat  [ [ (if r == 0           then [] els
                                             ]
 
 fullPlaneVertexList :: Int -> Int -> [Float]
-fullPlaneVertexList rows cols = concat [ [ x, y, z, 0, 0, 1.0, y, x ]
+fullPlaneVertexList rows cols = concat [ [ x - 0.5, y - 0.5, z, 0, 0, 1.0, y, x ]
                                        | (x, y, z) <- planeVertexList rows cols
                                        ]
 
@@ -116,13 +118,21 @@ fullSphereVertexList n = concat [ [ x, y, z, x, y, z, u, v ]
                                 , let (u, v) = (fromIntegral iu / fn / 2, fromIntegral iv / fn)
                                 ]
     
-createSphereAsset :: MonadIO m => Int -> m MeshAsset
-createSphereAsset n = liftIO do
-    let verticesL = fullSphereVertexList n
-    vertices <- newArray verticesL
-    let verticesSize = fromIntegral $ sizeOf (0.0 :: Float) * length verticesL
+newPlaneIndexList :: Int -> Int -> [Int]
+newPlaneIndexList rows cols = concat $ concat [ [ [ c + r * cols,      c + r * cols + 1,       c + (r + 1) * cols
+                                                  , c + r * cols + 1,  c + (r + 1) * cols + 1, c + (r + 1) * cols
+                                                  ]
+                                                  | c <- [0..cols-2]
+                                                ] 
+                                                | r <- [0..rows-2]
+                                              ]
 
-    let indicesL = fromIntegral <$> sphereIndexList n :: [Word32]
+createMeshAsset :: (MonadIO m) => [Float] -> [Int] -> m MeshAsset
+createMeshAsset verts inds = liftIO do
+    vertices <- newArray verts
+    let verticesSize = fromIntegral $ sizeOf (0.0 :: Float) * length verts
+
+    let indicesL = fromIntegral <$> inds :: [Word32]
     indices <- newArray indicesL
     let indicesSize = fromIntegral $ sizeOf (0 :: Word32) * length indicesL
 
@@ -152,3 +162,33 @@ createSphereAsset n = liftIO do
     GL.deleteObjectName vertVBO
     GL.deleteObjectName indVBO
     return $ MeshAsset vao (indicesSize `div` 3) ElementsArray
+
+
+createSphereAsset :: MonadIO m => Int -> m MeshAsset
+createSphereAsset n = liftIO do
+    createMeshAsset (fullSphereVertexList n) (sphereIndexList n)
+
+createPlaneAsset :: MonadIO m => m MeshAsset
+createPlaneAsset = liftIO do
+    createMeshAsset (fullPlaneVertexList 4 4) (newPlaneIndexList 4 4)
+
+createLinesAsset :: MonadIO m => [V3 Float] -> m MeshAsset
+createLinesAsset lines = liftIO do
+    let verts = concat [[x,y,z] | V3 x y z <- lines]
+    vertices <- newArray verts
+    let verticesSize = fromIntegral $ sizeOf (0.0 :: Float) * length verts
+
+    vao <- GL.genObjectName :: IO GL.VertexArrayObject
+    vertVBO <- GL.genObjectName :: IO GL.BufferObject
+
+    GL.bindVertexArrayObject $= Just vao
+
+    GL.bindBuffer GL.ArrayBuffer $= Just vertVBO
+    GL.bufferData GL.ArrayBuffer $= (fromIntegral verticesSize, vertices, GL.StaticDraw)
+
+    GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ 3 * sizeOf (0.0 :: Float)) nullPtr)
+    GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
+
+    GL.bindVertexArrayObject $= Nothing
+    GL.deleteObjectName vertVBO
+    return $ MeshAsset vao (verticesSize `div` 3) LinesArray

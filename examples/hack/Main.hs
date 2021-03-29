@@ -4,7 +4,6 @@
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE CPP                   #-}
-{-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE FlexibleContexts      #-}
 module Main where
 

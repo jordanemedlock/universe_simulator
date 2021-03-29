@@ -8,13 +8,12 @@ import Data.Foldable
 import Control.Lens.TH
 import GHC.Int
 
-data MeshType = TriangleArray | ElementsArray deriving Show
+data MeshType = TriangleArray | ElementsArray | LinesArray | PointsArray deriving Show
 
-data MeshAsset = MeshAsset { _meshAssetVao :: VertexArrayObject 
-                           , _meshAssetNumTris :: Int32
-                           , _meshAssetMeshType :: MeshType
+data MeshAsset = MeshAsset { meshVao :: VertexArrayObject 
+                           , meshNumValues :: Int32
+                           , meshType :: MeshType
                            } deriving Show
-makeFields ''MeshAsset
 
 data Event =  KeyEvent GLFW.Key Int GLFW.KeyState GLFW.ModifierKeys
             | CursorEvent Double Double 

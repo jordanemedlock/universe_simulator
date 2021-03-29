@@ -27,18 +27,22 @@ void main()
     vec3 lightDir = normalize(lightPos - FragPos);  
     float diff = max(dot(norm, lightDir), 0.0);
     vec4 diffuse = diff * lightColor;
+    diffuse.a = 1.0;
 
     // ambient
     vec4 ambient = ambientStrength * ambientColor;
+    ambient.a = 1.0;
 
     // specular
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
     vec4 specular = specularStrength * spec * lightColor;
+    specular.a = 1.0;
 
     // result
     vec4 result = (ambient + diffuse + specular) * texture(objectTexture, TexCoord);
     // vec4 result = texture(objectTexture, TexCoord);
+    // if (result.a < 0.5) discard; else FragColor = result;
     FragColor = result;
 }
