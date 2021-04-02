@@ -7,6 +7,9 @@ import Data.Word ( Word8 )
 import Codec.Picture (readImage, convertRGBA8, Image(..))
 import qualified Data.Vector.Storable as VS
 import Control.Monad.IO.Class ( MonadIO(..) )
+import Linear
+import Foreign.Marshal.Array
+import Foreign.Ptr
 
 -- | Create a texture using the pixel data
 createTexture   :: Int -- ^ Texture width
@@ -28,6 +31,25 @@ createTexture width height textureData = do
     GL.textureBinding GL.Texture2D $= Nothing
 
     return (texId, size)
+
+unitTexture :: MonadIO m => V4 Float -> m GL.TextureObject
+unitTexture (V4 r g b a) = liftIO do
+    color <- newArray (floor.(*256) <$> [r, g, b, a] :: [Word8])
+    texId <- GL.genObjectName :: IO GL.TextureObject
+
+    GL.textureBinding GL.Texture2D $= Just texId
+
+    let pixelData = GL.PixelData GL.RGBA GL.UnsignedByte color
+
+    GL.texImage2D GL.Texture2D GL.NoProxy 0 GL.RGBA8 (GL.TextureSize2D 1 1) 0 pixelData
+    
+    GL.textureWrapMode GL.Texture2D GL.S $= (GL.Repeated, GL.Repeat)
+    GL.textureWrapMode GL.Texture2D GL.T $= (GL.Repeated, GL.Repeat)
+    GL.textureFilter GL.Texture2D $= ((GL.Nearest, Nothing), GL.Nearest)
+
+    GL.textureBinding GL.Texture2D $= Nothing
+
+    return texId
 
 -- | Loads the texture from a png file
 loadTexture :: MonadIO m => String -- ^ Filename

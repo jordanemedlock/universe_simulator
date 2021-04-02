@@ -36,7 +36,9 @@ dependencies:
 - lens >=4.18 && <5
 - directory
 - apecs
+- template-haskell
 - freetype2 >=0.2 && <0.3
+- random
 
 library:
   source-dirs: engine
@@ -76,18 +78,23 @@ executables:
   #   main: Main.hs
   #   dependencies:
   #   - universe-simulator
-  ecs:
-    source-dirs: examples/ecs
-    main: Main.hs
-    dependencies:
-    - universe-simulator
-  text:
-    source-dirs: examples/text
-    main: Main.hs
-    dependencies:
-    - universe-simulator
+  # ecs:
+  #   source-dirs: examples/ecs
+  #   main: Main.hs
+  #   dependencies:
+  #   - universe-simulator
+  # text:
+  #   source-dirs: examples/text
+  #   main: Main.hs
+  #   dependencies:
+  #   - universe-simulator
   hack:
     source-dirs: examples/hack
+    main: Main.hs
+    dependencies:
+    - universe-simulator
+  solar-system:
+    source-dirs: examples/solar-system
     main: Main.hs
     dependencies:
     - universe-simulator
@@ -99,7 +106,7 @@ ghc-options:
 - -Wall
 - -Wunused-binds
 - -Wunused-imports
-- -ddump-splices
+# - -ddump-splices
 # tests:
 
 
@@ -111,3 +118,7 @@ default-extensions:
 - FlexibleInstances
 - ScopedTypeVariables
 - LambdaCase
+- TypeApplications
+- TypeFamilies
+- MultiParamTypeClasses
+- FlexibleContexts

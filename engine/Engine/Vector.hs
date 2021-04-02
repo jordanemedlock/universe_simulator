@@ -62,7 +62,7 @@ eye4 = toGLMatrix $ M.fromList 4 4
         ]
 
         
-rotationMatrix :: L.V3 Float -> L.M33 Float
+rotationMatrix :: (Num a, L.Epsilon a, Fractional a, Floating a, RealFloat a) => L.V3 a -> L.M33 a
 rotationMatrix (L.V3 x y z) = L.fromQuaternion $ qx * qy * qz
     where
         qx = L.axisAngle (L.V3 1 0 0) (degToRad x)

@@ -20,7 +20,8 @@ type HasFormControl w = ( Get w IO TextBox
                         )
 
 drawTextBoxes :: forall tag. forall w. (HasTag tag w, HasTextBox w) => tag -> System w ()
-drawTextBoxes _ = cmapM_ \(_ :: tag, TextBox t f c s, Pos2D pos) -> get f >>= \f -> renderString f t pos s c
+drawTextBoxes _ = cmapM_ \(_ :: tag, TextBox t f c s, Pos2D pos) -> 
+            get f >>= \f -> renderString f t (realToFrac <$> pos) (realToFrac s) (realToFrac <$> c)
     
 
 textInput :: (HasTextBox w, HasFormControl w) => Event -> System w ()
