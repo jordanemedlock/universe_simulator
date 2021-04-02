@@ -108,7 +108,6 @@ renderString    :: (MonadIO m)
                 -> V4 Float -- ^ Font color
                 -> m ()
 renderString font@(Font chars shader vao vbo) string (V2 x y) scale color = liftIO do
-
     withShader shader do
         "textColor" $== color
 

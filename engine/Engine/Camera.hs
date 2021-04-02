@@ -6,20 +6,20 @@ import Control.Lens
 import Control.Lens.TH
 import Engine.Types
 
-degToRad :: Float -> Float 
+degToRad :: (Num a, Fractional a, Floating a, Epsilon a) => a -> a 
 degToRad = (*pi).(/180)
 
-cameraForward :: Float -> Float -> V3 Float
+cameraForward :: (Num a, Fractional a, Floating a, Epsilon a) => a -> a -> V3 a
 cameraForward pitch yaw = normalize $ V3 dx dy dz
     where 
         dx = cos (degToRad yaw) * cos (degToRad pitch)
         dy = sin (degToRad pitch)
         dz = sin (degToRad yaw) * cos (degToRad pitch)
 
-cameraRight :: Float -> Float -> V3 Float
+cameraRight :: (Num a, Fractional a, Floating a, Epsilon a) => a -> a -> V3 a
 cameraRight pitch yaw = normalize $ cross (cameraForward pitch yaw) (V3 0 1 0)
 
-cameraUp :: Float -> Float -> V3 Float
+cameraUp :: (Num a, Fractional a, Floating a, Epsilon a) => a -> a -> V3 a
 cameraUp pitch yaw = normalize $ cross (cameraRight pitch yaw) (cameraForward pitch yaw)
 
 -- moveCameraForward :: Float -> Camera -> Camera

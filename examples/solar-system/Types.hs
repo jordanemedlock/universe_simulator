@@ -13,7 +13,7 @@ instance Semigroup Mantissa where (<>) = (+)
 instance Monoid Mantissa where mempty = 0
 instance Component Mantissa where type Storage Mantissa = Global Mantissa
 
-newtype Translation = Translation (V3 Float) deriving (Show, Eq, Num)
+newtype Translation = Translation (V3 Double) deriving (Show, Eq, Num)
 instance Semigroup Translation where (<>) = (+)
 instance Monoid Translation where mempty = 0
 instance Component Translation where type Storage Translation = Global Translation
@@ -29,14 +29,15 @@ zettams = Mantissa 21
 yottams = Mantissa 24
 
 
-newtype Vel = Vel (V3 Float) deriving Show
+newtype Vel = Vel (V3 Double) deriving Show
+newtype RotVel = RotVel (V3 Double) deriving Show
 
-data Orbit = Orbit { rotation :: Float
-                   , revolution :: Float
-                   , rotationSpeed :: Float 
-                   , revolutionSpeed :: Float 
-                   , center :: V3 Float
-                   , radius :: Float
+data Orbit = Orbit { rotation :: Double
+                   , revolution :: Double
+                   , rotationSpeed :: Double 
+                   , revolutionSpeed :: Double 
+                   , center :: V3 Double
+                   , radius :: Double
                    } deriving Show
 
 data Sun = Sun deriving Show
@@ -54,20 +55,26 @@ data Overlay = Overlay deriving Show
 
 newtype Link = Link Entity deriving Show
 
-newtype Color = Color (V4 Float) deriving Show
+newtype Color = Color (V4 Double) deriving Show
 
-data GameSettings = GameSettings { cameraSpeed :: (Float, Float) -- (cursor, keyboard)
+newtype Mass = Mass Double deriving Show -- havent picked units yet (prob kg)
+data Kinematic = Kinematic deriving Show
+data Static = Static deriving Show
+
+data GameSettings = GameSettings { cameraSpeed :: (Double, Double) -- (cursor, keyboard)
                                  , screenSize :: V2 Int
                                  , debug :: Bool
+                                 , gravConstant :: Double -- m^3 * kg^-1 * s^-2
                                  } deriving Show
 instance Semigroup GameSettings where (<>) = const
-instance Monoid GameSettings where mempty = GameSettings (0.1, 5.0) (V2 1920 1080) True
+instance Monoid GameSettings where mempty = GameSettings (0.1, 0.01) (V2 1920 1080) True (6.6743*10^^(negate 11))
 instance Component GameSettings where type Storage GameSettings = Global GameSettings
 
 data CursorPos = CursorPos Double Double deriving (Show, Eq)
 instance Semigroup CursorPos where (CursorPos x1 y1) <> (CursorPos x2 y2) = CursorPos (x1+x2) (y1+y2)
 instance Monoid CursorPos where mempty = CursorPos 0 0
 instance Component CursorPos where type Storage CursorPos = Global CursorPos
+
 
 
 data GameState = Paused | Playing | Closed | Terminal deriving (Show, Eq, Enum)
@@ -77,13 +84,24 @@ instance Component GameState where type Storage GameState = Global GameState
 
 data Hud = Hud deriving Show
 
+data Thrust = Thrust { thrustForward :: Double
+                     , thrustRight :: Double
+                     , thrustUp :: Double
+                     , thrustRoll :: Double
+                     , thrustPitch :: Double
+                     , thrustYaw :: Double
+                     } deriving Show
+
 -- newtype Rand = Rand StdGen deriving (Show, Eq)
 -- instance Semigroup Rand where (<>) = const
 -- instance Monoid Rand where mempty = Rand (mkStdGen 0)
 -- instance Component Rand where type Storage Rand = Global Rand
 
 mapComponents :: [Name]
-mapComponents = [ ''Hud, ''Orbit, ''Font, ''Vel, ''Planet, ''Overlay, ''Link, ''Color ]
+mapComponents = [ ''Hud, ''Orbit, ''Font, ''Vel, ''Planet, ''RotVel
+                , ''Overlay, ''Link, ''Color
+                , ''Mass, ''Kinematic, ''Static, ''Thrust
+                ]
 
 nonMapComponents :: [Name]
 nonMapComponents = [ ''GameSettings, ''CursorPos, ''GameState

@@ -168,27 +168,14 @@ createSphereAsset :: MonadIO m => Int -> m MeshAsset
 createSphereAsset n = liftIO do
     createMeshAsset (fullSphereVertexList n) (sphereIndexList n)
 
-createPlaneAsset :: MonadIO m => m MeshAsset
-createPlaneAsset = liftIO do
-    createMeshAsset (fullPlaneVertexList 4 4) (newPlaneIndexList 4 4)
+createPlaneAsset :: MonadIO m => Int -> m MeshAsset
+createPlaneAsset n = liftIO do
+    createMeshAsset (fullPlaneVertexList n n) (newPlaneIndexList n n)
 
 createLinesAsset :: MonadIO m => [V3 Float] -> m MeshAsset
-createLinesAsset lines = liftIO do
-    let verts = concat [[x,y,z] | V3 x y z <- lines]
-    vertices <- newArray verts
-    let verticesSize = fromIntegral $ sizeOf (0.0 :: Float) * length verts
-
-    vao <- GL.genObjectName :: IO GL.VertexArrayObject
-    vertVBO <- GL.genObjectName :: IO GL.BufferObject
-
-    GL.bindVertexArrayObject $= Just vao
-
-    GL.bindBuffer GL.ArrayBuffer $= Just vertVBO
-    GL.bufferData GL.ArrayBuffer $= (fromIntegral verticesSize, vertices, GL.StaticDraw)
-
-    GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ 3 * sizeOf (0.0 :: Float)) nullPtr)
-    GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
-
-    GL.bindVertexArrayObject $= Nothing
-    GL.deleteObjectName vertVBO
-    return $ MeshAsset vao (verticesSize `div` 3) LinesArray
+createLinesAsset points = liftIO do
+    let verts = concat [[x,y,z,0,0,1,0,0] | V3 x y z <- points]
+    let indices = concat [ [i, i, i+1]
+                         | i <- [0..(length points)-2]
+                         ]
+    createMeshAsset verts indices
