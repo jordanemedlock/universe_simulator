@@ -8,6 +8,7 @@ import qualified Data.ByteString as BS
 import Control.Monad.Trans.Reader
 import Control.Monad.IO.Class
 import System.Directory
+import Control.Monad
 import Control.Monad.Trans.Except
 import System.FilePath.Posix
 

@@ -3,7 +3,14 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: gltf-codec-0.1.0.2@sha256:9d8b877cffde7bebdf6d3c584b730d505e5f091eafabcd8a1a91d6eccf124228,2544
+    pantry-tree:
+      size: 1665
+      sha256: f50f20e176ed05b902289520a496957e3657341506f123f00c4583520bde386e
+  original:
+    hackage: gltf-codec-0.1.0.2@sha256:9d8b877cffde7bebdf6d3c584b730d505e5f091eafabcd8a1a91d6eccf124228,2544
 snapshots:
 - completed:
     size: 533252

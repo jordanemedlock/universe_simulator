@@ -80,7 +80,7 @@ drawMeshAsset (MeshAsset vao numTris TriangleArray) = liftIO do
 drawMeshAsset (MeshAsset vao numTris LinesArray) = liftIO do
     withVAO vao $ liftIO $ GL.drawArrays GL.Lines 0 numTris
 drawMeshAsset (MeshAsset vao numTris ElementsArray) = liftIO do
-    withVAO vao $ liftIO $ GL.drawElements GL.Triangles numTris GL.UnsignedInt nullPtr
+    withVAO vao $ liftIO $ GL.drawElements GL.Triangles numTris GL.UnsignedShort nullPtr
 
 planeVertexList :: Int -> Int -> [(Float, Float, Float)]
 planeVertexList rows cols = concat [ [ (fromIntegral r / fromIntegral (rows-1), fromIntegral c / fromIntegral (cols-1), 0.0) 
@@ -151,8 +151,8 @@ createMeshAsset verts inds = liftIO do
     GL.vertexAttribPointer (GL.AttribLocation 1) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (3 * (sizeOf (0.0 :: Float)))))
     GL.vertexAttribArray (GL.AttribLocation 1) $= GL.Enabled
 
-    GL.vertexAttribPointer (GL.AttribLocation 2) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (6 * (sizeOf (0.0 :: Float)))))
-    GL.vertexAttribArray (GL.AttribLocation 2) $= GL.Enabled
+    GL.vertexAttribPointer (GL.AttribLocation 3) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (6 * (sizeOf (0.0 :: Float)))))
+    GL.vertexAttribArray (GL.AttribLocation 3) $= GL.Enabled
 
     GL.bindBuffer GL.ElementArrayBuffer $= Just indVBO
     GL.bufferData GL.ElementArrayBuffer $= (fromIntegral indicesSize, indices, GL.StaticDraw)
