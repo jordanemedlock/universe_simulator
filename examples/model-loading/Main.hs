@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell,NamedFieldPuns,PatternSynonyms,DuplicateRecordFields #-}
+{-# LANGUAGE TemplateHaskell,NamedFieldPuns,PatternSynonyms,DuplicateRecordFields,TupleSections #-}
 
 module Main where
 
@@ -11,7 +11,6 @@ import Apecs.Components
 import Apecs.Core (ExplMembers(..))
 import Linear
 import Control.Monad
-import qualified Data.Vector as V
 import Data.Vector ((!), (!?))
 import Graphics.UI.GLFW (Key(..), KeyState(..))
 import qualified Graphics.UI.GLFW as GLFW
@@ -20,16 +19,7 @@ import Graphics.Rendering.OpenGL (($=))
 import System.Exit
 import Text.Printf
 import Data.Maybe
-import qualified Codec.GlTF as TF
-import qualified Codec.GlTF.Mesh as TF
-import qualified Codec.GlTF.Accessor as TF
-import qualified Codec.GlTF.BufferView as TF
-import qualified Codec.GlTF.Material as TF
-import qualified Codec.GlTF.Buffer as TF
-import qualified Codec.GlTF.URI as TF
-import qualified Codec.GlTF.Prelude as TF
 import qualified Data.ByteString as BS
-import Control.Monad.Trans.Except
 import Control.Monad.IO.Class
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Text as T
@@ -50,111 +40,6 @@ getRight (Right x) = x
 
 getJust :: Maybe a -> a
 getJust (Just a) = a
-
-exceptFromJust :: Monad m => String -> Maybe a -> ExceptT String m a
-exceptFromJust name (Just x) = return x
-exceptFromJust name Nothing = throwE $ "Missing value with name: " <> name
-
-accBufferView :: TF.Accessor -> Maybe TF.BufferViewIx
-accBufferView = TF.bufferView
-accComponentType :: TF.Accessor -> TF.ComponentType
-accComponentType = TF.componentType
-accCount :: TF.Accessor -> TF.Size
-accCount = TF.count
-
-bvByteOffset :: TF.BufferView -> TF.Size
-bvByteOffset = TF.byteOffset 
-bvByteLength :: TF.BufferView -> TF.Size
-bvByteLength = TF.byteLength 
-
-loadGlTF :: MonadIO m => FilePath -> (String -> GL.AttribLocation) -> m (Either String (V.Vector MeshAsset))
-loadGlTF filepath locations = liftIO $ runExceptT $ do
-
-    model       <- ExceptT $ TF.fromFile filepath
-    buffers     <- exceptFromJust "buffers"     $ TF.buffers model
-    bufferViews <- exceptFromJust "bufferViews" $ TF.bufferViews model
-    meshes      <- exceptFromJust "meshes"      $ TF.meshes model
-    nodes       <- exceptFromJust "nodes"       $ TF.nodes model
-    textures    <- exceptFromJust "textures"    $ TF.textures model
-    materials   <- exceptFromJust "materials"   $ TF.materials model
-    accessors   <- exceptFromJust "accessors"   $ TF.accessors model
-    images      <- exceptFromJust "images"      $ TF.images model
-    let baseDir = takeDirectory filepath
-
-
-    mconcat . V.toList <$> V.forM meshes \TF.Mesh {TF.primitives} ->
-        V.forM primitives $ \mp@TF.MeshPrimitive {TF.attributes, TF.mode, TF.indices, TF.material} -> do
-            (TF.AccessorIx indIx)   <- exceptFromJust "indices" indices
-            (TF.MaterialIx matIx)   <- exceptFromJust "material" material
-            indAcc                  <- exceptFromJust "indices accessor" $ accessors !? indIx
-            mat                     <- exceptFromJust "material" $ materials !? matIx
-            (TF.BufferViewIx indBVI) <- exceptFromJust "bufferView" $ accBufferView indAcc
-            indBV                   <- exceptFromJust "indices bufferView" $ bufferViews !? indBVI
-            let (TF.BufferIx indBI) = TF.buffer indBV
-            indB                    <- exceptFromJust "indices buffer" $ buffers !? indBI
-            uri                     <- exceptFromJust "uri" $ TF.uri indB
-
-            bs <- ExceptT $ liftIO $ TF.loadURI ((Right<$>).BS.readFile.(baseDir</>)) uri
-
-            vao <- GL.genObjectName
-            indVBO <- GL.genObjectName
-            vertVBO <- GL.genObjectName
-
-            GL.bindVertexArrayObject $= Just vao
-
-            liftIO $ BS.useAsCString bs \cstr -> do
-                let ptr = cstr `plusPtr` bvByteOffset indBV
-
-                GL.bindBuffer GL.ElementArrayBuffer $= Just indVBO
-                GL.bufferData GL.ElementArrayBuffer $= (fromIntegral (bvByteLength indBV), ptr, GL.StaticDraw)
-
-                GL.bindBuffer GL.ArrayBuffer $= Just vertVBO
-                GL.bufferData GL.ArrayBuffer $= (fromIntegral (BS.length bs), cstr, GL.StaticDraw)
-                
-            forM_ (HM.toList attributes) $ \(name, TF.AccessorIx attrIx) -> do
-                attrAcc                     <- exceptFromJust "attribute accessor" $ accessors !? attrIx
-                (TF.BufferViewIx attrBVI)   <- exceptFromJust "attribute bufferViewIx" $ accBufferView attrAcc
-                attrBV                      <- exceptFromJust "attribute bufferView" $ bufferViews !? attrBVI
-
-                let intHandling = case accComponentType attrAcc of
-                        TF.FLOAT -> GL.ToFloat
-                        rest -> GL.KeepIntegral
-
-                let dataType = case accComponentType attrAcc of 
-                        TF.BYTE -> GL.Byte
-                        TF.UNSIGNED_BYTE -> GL.UnsignedByte
-                        TF.SHORT -> GL.Short
-                        TF.UNSIGNED_SHORT -> GL.UnsignedShort
-                        TF.UNSIGNED_INT -> GL.UnsignedInt
-                        TF.FLOAT -> GL.Float
-                        rest -> error $ "unknown accessor component type: "<>show rest 
-                
-                let numComp = case TF.type' attrAcc of 
-                        TF.SCALAR -> 1
-                        TF.VEC2 -> 2
-                        TF.VEC3 -> 3
-                        TF.VEC4 -> 4
-                        TF.MAT2 -> 4
-                        TF.MAT3 -> 9
-                        TF.MAT4 -> 16
-                        rest -> error $ "unknown accessor type: "<>show rest
-
-                -- TODO: maybe apply something to the name
-                let attrName = T.unpack name
-                let attrLoc = locations attrName
-
-                when (attrLoc == GL.AttribLocation (-1)) $ throwE $ "cant find program attribute with name: " <> attrName
-
-                GL.vertexAttribPointer attrLoc $= (intHandling, GL.VertexArrayDescriptor numComp dataType (fromIntegral (bvByteLength attrBV)) (nullPtr `plusPtr` bvByteOffset attrBV))
-                GL.vertexAttribArray attrLoc $= GL.Enabled
-
-            GL.bindVertexArrayObject $= Nothing
-            -- GL.deleteObjectName vertVBO
-            -- GL.deleteObjectName indVBO
-
-            return (MeshAsset vao (fromIntegral $ accCount indAcc) ElementsArray)
-
-
 
 
 main = do
@@ -193,15 +78,20 @@ initialize = do
 
 
     debugLog "Loading gltf file"
-    cube <- either (error.show) V.head <$> loadGlTF "resources/models/AnimatedCube/AnimatedCube.gltf" \case 
+    nodes <- getRight <$> loadGlTF "resources/models/AnimatedCube/AnimatedCube.gltf" \case 
         "POSITION" -> GL.AttribLocation 0
         "NORMAL" -> GL.AttribLocation 1
         "TANGENT" -> GL.AttribLocation 2
         "TEXCOORD_0" -> GL.AttribLocation 3
         _ -> GL.AttribLocation (-1)
 
+    liftIO $ print nodes
     liftIO $ putStrLn "\n\n"
     -- error "stop here"
+
+    etys <- createGlTFEntities nodes
+
+    forM_ etys $ \ety -> Apecs.modify ety $ (,Shader program, Pos $ V3 10 0 0).(id :: Mesh -> Mesh)
 
     (V2 w h :: V2 Double) <- (realToFrac <$>) . screenSize <$> get global
 
@@ -220,7 +110,7 @@ initialize = do
     -- _ <- newEntity (Mesh planeMesh, Color $ V4 0 1 0 1, Pos $ V3 0 0 0, RotEuler $ V3 0 0 0, Scale $ V3 0.01 1.00 0.01, Shader fixedLighting, Texture unitTex)
     -- _ <- newEntity (Mesh planeMesh, Color $ V4 0 0 1 1, Pos $ V3 0 0 0, RotEuler $ V3 90 0 0, Scale $ V3 0.01 1.00 0.01, Shader fixedLighting, Texture unitTex)
 
-    ety <- newEntity (Mesh cube, Pos $ V3 0 0 0, Scale $ V3 1 1 1, RotEuler $ V3 0 0 0, Shader program, Texture moonTex)
+    -- ety <- newEntity (Mesh cube, Pos $ V3 0 0 0, Scale $ V3 1 1 1, RotEuler $ V3 0 0 0, Shader program, Texture moonTex)
     -- _ <- newEntity ( Overlay
     --                 , Pos $ V3 0 0 0, RotEuler $ V3 0 0 0, Scale $ V3 1 1 1
     --                 , Texture selectTex, Shader fixedLighting, Mesh planeMesh
@@ -244,16 +134,20 @@ draw = do
         Terminal -> drawTerminal
         _ -> drawObjects (Filter @Mesh) >> drawTextBoxes Hud
 
+getTransformFrom pos rot scale = mkTransformationMat rot pos !*! scale
+
 drawObjects :: forall tag. (Get World IO tag, Members World IO tag) => tag -> WorldSystem ()
 drawObjects _ = cmapM_ $ \(Camera, Pos camPos, CamRot pitch yaw) -> do
-    cmapM_ $ \(_ :: tag, Texture tex, Shader sdr, Mesh mesh, Pos pos, mrot, mscale, mcolor) -> do
-        -- debugLog $ show pos <> " " <> show mcolor
+    cmapM_ $ \(_ :: tag, Texture tex, Shader sdr, Mesh mesh, mcolor, (mtransform, mrot, mpos, mscale)) -> do
         let view = lookAt (realToFrac <$> camPos) (realToFrac <$> camPos + cameraForward pitch yaw) (V3 0 1 0 :: V3 Float)
         let proj = perspective (120 :: Float) (16.0/9) 0.001 1000000.0
-        let (Scale size) = fromMaybe (Scale $ V3 1 1 1) mscale
-        let scaleMat = scaled $ point size
         let rotMat = getRotMat $ fromMaybe (RotEuler $ V3 0 0 0) mrot
-        let model = (realToFrac <$>) <$> mkTransformationMat rotMat pos !*! scaleMat
+        let (Scale scale) = fromMaybe (Scale $ V3 1 1 1) mscale
+        let (Pos pos) = fromMaybe (Pos $ V3 0 0 0) mpos
+        let scaleMat = scaled $ point scale
+        let m1 = getTransformFrom pos rotMat scaleMat
+        let (Transform trans) = fromMaybe (Transform m1) mtransform
+        let model = (realToFrac <$>) <$> trans                                                    
         let (Color color) = fromMaybe (Color $ V4 1 1 1 1) mcolor
 
 

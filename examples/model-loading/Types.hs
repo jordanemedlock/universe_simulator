@@ -102,7 +102,6 @@ data Thrust = Thrust { thrustForward :: Double
                      } deriving Show
 
                      
-newtype HasParent = HasParent Entity deriving Show
 
 -- newtype Rand = Rand StdGen deriving (Show, Eq)
 -- instance Semigroup Rand where (<>) = const
@@ -113,7 +112,6 @@ mapComponents :: [Name]
 mapComponents = [ ''Hud, ''Orbit, ''Font, ''Vel, ''Planet, ''RotVel
                 , ''Overlay, ''Link, ''Color
                 , ''Mass, ''Kinematic, ''Static, ''Thrust
-                , ''HasParent
                 ]
 
 nonMapComponents :: [Name]

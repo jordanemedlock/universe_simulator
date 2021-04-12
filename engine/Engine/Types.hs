@@ -2,17 +2,20 @@
 module Engine.Types where
 
 import Linear
-import Graphics.Rendering.OpenGL hiding (Color)
+import Graphics.Rendering.OpenGL (($=))
+import qualified Graphics.Rendering.OpenGL as GL
 import qualified Graphics.UI.GLFW as GLFW
 import Data.Foldable
 import Control.Lens.TH
 import GHC.Int
 
-data MeshType = TriangleArray | ElementsArray | LinesArray | PointsArray deriving Show
+data MeshType = Arrays | Elements deriving Show
 
-data MeshAsset = MeshAsset { meshVao :: VertexArrayObject 
+data MeshAsset = MeshAsset { meshVao :: GL.VertexArrayObject 
                            , meshNumValues :: Int32
                            , meshType :: MeshType
+                           , meshMode :: GL.PrimitiveMode
+                           , meshElementType :: GL.DataType
                            } deriving Show
 
 data Event =  KeyEvent GLFW.Key Int GLFW.KeyState GLFW.ModifierKeys
@@ -20,47 +23,47 @@ data Event =  KeyEvent GLFW.Key Int GLFW.KeyState GLFW.ModifierKeys
             | CharEvent Char 
             deriving Show
 
-instance UniformComponent a => Uniform (V1 a) where 
-    uniform loc = makeStateVar getter setter
+instance GL.UniformComponent a => GL.Uniform (V1 a) where 
+    uniform loc = GL.makeStateVar getter setter
         where
-            getter = (\(Vector1 x) -> V1 x) <$> get (uniform loc)
-            setter (V1 x) = uniform loc $= Vector1 x
+            getter = (\(GL.Vector1 x) -> V1 x) <$> GL.get (GL.uniform loc)
+            setter (V1 x) = GL.uniform loc $= GL.Vector1 x
 
-instance UniformComponent a => Uniform (V2 a) where 
-    uniform loc = makeStateVar getter setter
+instance GL.UniformComponent a => GL.Uniform (V2 a) where 
+    uniform loc = GL.makeStateVar getter setter
         where
-            getter = (\(Vector2 x y) -> V2 x y) <$> get (uniform loc)
-            setter (V2 x y) = uniform loc $= Vector2 x y
+            getter = (\(GL.Vector2 x y) -> V2 x y) <$> GL.get (GL.uniform loc)
+            setter (V2 x y) = GL.uniform loc $= GL.Vector2 x y
 
-instance UniformComponent a => Uniform (V3 a) where 
-    uniform loc = makeStateVar getter setter
+instance GL.UniformComponent a => GL.Uniform (V3 a) where 
+    uniform loc = GL.makeStateVar getter setter
         where
-            getter = (\(Vector3 x y z) -> V3 x y z) <$> get (uniform loc)
-            setter (V3 x y z) = uniform loc $= Vector3 x y z
+            getter = (\(GL.Vector3 x y z) -> V3 x y z) <$> GL.get (GL.uniform loc)
+            setter (V3 x y z) = GL.uniform loc $= GL.Vector3 x y z
 
-instance {-# OVERLAPS #-} (MatrixComponent a, UniformComponent a) => Uniform (M44 a) where 
-    uniform loc = makeStateVar (m44Getter loc) (m44Setter loc)
+instance {-# OVERLAPS #-} (GL.MatrixComponent a, GL.UniformComponent a) => GL.Uniform (M44 a) where 
+    uniform loc = GL.makeStateVar (m44Getter loc) (m44Setter loc)
 
-instance UniformComponent a => Uniform (V4 a) where 
-    uniform loc = makeStateVar getter setter
+instance GL.UniformComponent a => GL.Uniform (V4 a) where 
+    uniform loc = GL.makeStateVar getter setter
         where
-            getter = (\(Vector4 x y z w) -> V4 x y z w) <$> get (uniform loc)
-            setter (V4 x y z w) = uniform loc $= Vector4 x y z w
+            getter = (\(GL.Vector4 x y z w) -> V4 x y z w) <$> GL.get (GL.uniform loc)
+            setter (V4 x y z w) = GL.uniform loc $= GL.Vector4 x y z w
 
 
 
-m44Getter :: forall a. (MatrixComponent a, UniformComponent a) => UniformLocation -> IO (M44 a)
+m44Getter :: forall a. (GL.MatrixComponent a, GL.UniformComponent a) => GL.UniformLocation -> IO (M44 a)
 m44Getter loc = do
-    mat <- get (uniform loc) :: IO (GLmatrix a)
-    components <- getMatrixComponents RowMajor mat
+    mat <- GL.get (GL.uniform loc) :: IO (GL.GLmatrix a)
+    components <- GL.getMatrixComponents GL.RowMajor mat
     return $ toM44 components
 
 
-m44Setter :: forall a. (MatrixComponent a, UniformComponent a) => UniformLocation -> M44 a -> IO () 
+m44Setter :: forall a. (GL.MatrixComponent a, GL.UniformComponent a) => GL.UniformLocation -> M44 a -> IO () 
 m44Setter loc mat = do
     let l = foldr (\i a -> toList i <> a) [] mat
-    mat <- newMatrix RowMajor l :: IO (GLmatrix a)
-    uniform loc $= (mat :: GLmatrix a)
+    mat <- GL.newMatrix GL.RowMajor l :: IO (GL.GLmatrix a)
+    GL.uniform loc $= (mat :: GL.GLmatrix a)
 
 toM44 :: [a] -> M44 a
 toM44 mat = V4 (toV4 row1) (toV4 row2) (toV4 row3) (toV4 row4)
