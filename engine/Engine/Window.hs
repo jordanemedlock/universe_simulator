@@ -19,7 +19,6 @@ errorCallback err msg = do
 
 debugCallback :: Show a => a -> IO ()
 debugCallback msg = do
-    putStr "GL Error Occurred: "
     print msg
 
 initWindow :: MonadIO m => V2 Int -> String -> m GLFW.Window

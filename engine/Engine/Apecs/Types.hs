@@ -25,6 +25,8 @@ newtype Scale = Scale (V3 Double) deriving Show
 newtype Size2D = Size2D (V2 Double) deriving Show
 data CamRot = CamRot Double Double deriving Show
 data Hidden = Hidden deriving Show
+newtype Transform = Transform (M44 Double) deriving Show
+newtype Scene = Scene String deriving Show
 
 newtype Texture = Texture GL.TextureObject deriving Show
 newtype Shader = Shader GL.Program deriving Show
@@ -45,12 +47,14 @@ data TextBox = TextBox String Entity (V4 Double) Double deriving Show
 data FormControl = FormControl deriving Show -- bool is focus
 data Focus = Focus deriving Show 
 newtype TextInput = TextInput Int deriving Show -- int is cursor pos
+newtype HasParent = HasParent Entity deriving Show
 
 defaultMapComponents :: [Name]
 defaultMapComponents = [ ''Pos, ''Pos2D, ''Rot, ''Scale, ''Size2D
                        , ''CamRot, ''Hidden, ''Texture, ''Shader
                        , ''Mesh, ''Console, ''Command, ''TextBox
                        , ''FormControl, ''Focus, ''TextInput
+                       , ''Transform, ''Scene, ''HasParent
                        ]
 
 defaultAllComponents :: [Name]

@@ -39,6 +39,9 @@ dependencies:
 - template-haskell
 - freetype2 >=0.2 && <0.3
 - random
+- gltf-codec
+- unordered-containers
+- text
 
 library:
   source-dirs: engine
@@ -53,16 +56,16 @@ library:
   # - freetype2 >=0.2 && <0.3
 
 executables:
-  blank-window:
-    source-dirs: examples/blank-window
-    main: Main.hs
-    dependencies:
-    - universe-simulator
-  box:
-    source-dirs: examples/box
-    main: Main.hs
-    dependencies:
-    - universe-simulator
+  # blank-window:
+  #   source-dirs: examples/blank-window
+  #   main: Main.hs
+  #   dependencies:
+  #   - universe-simulator
+  # box:
+  #   source-dirs: examples/box
+  #   main: Main.hs
+  #   dependencies:
+  #   - universe-simulator
   # textured-box:
   #   source-dirs: examples/textured-box
   #   main: Main.hs
@@ -88,13 +91,18 @@ executables:
   #   main: Main.hs
   #   dependencies:
   #   - universe-simulator
-  hack:
-    source-dirs: examples/hack
-    main: Main.hs
-    dependencies:
-    - universe-simulator
-  solar-system:
-    source-dirs: examples/solar-system
+  # hack:
+  #   source-dirs: examples/hack
+  #   main: Main.hs
+  #   dependencies:
+  #   - universe-simulator
+  # solar-system:
+  #   source-dirs: examples/solar-system
+  #   main: Main.hs
+  #   dependencies:
+  #   - universe-simulator
+  model-loading:
+    source-dirs: examples/model-loading
     main: Main.hs
     dependencies:
     - universe-simulator

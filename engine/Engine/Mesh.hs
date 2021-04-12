@@ -72,15 +72,13 @@ createCubeAsset = liftIO do
 
         GL.vertexAttribPointer (GL.AttribLocation 1) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ 6 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (3 * (sizeOf (0.0 :: Float)))))
         GL.vertexAttribArray (GL.AttribLocation 1) $= GL.Enabled
-    return $ MeshAsset vao 36 TriangleArray
+    return $ MeshAsset vao 36 Arrays GL.Triangles GL.UnsignedInt
 
 drawMeshAsset :: MonadIO m => MeshAsset -> m ()
-drawMeshAsset (MeshAsset vao numTris TriangleArray) = liftIO do
-    withVAO vao $ liftIO $ GL.drawArrays GL.Triangles 0 numTris
-drawMeshAsset (MeshAsset vao numTris LinesArray) = liftIO do
-    withVAO vao $ liftIO $ GL.drawArrays GL.Lines 0 numTris
-drawMeshAsset (MeshAsset vao numTris ElementsArray) = liftIO do
-    withVAO vao $ liftIO $ GL.drawElements GL.Triangles numTris GL.UnsignedInt nullPtr
+drawMeshAsset (MeshAsset vao numTris Arrays mode dataType) = liftIO do
+    withVAO vao $ liftIO $ GL.drawArrays mode 0 numTris
+drawMeshAsset (MeshAsset vao numTris Elements mode dataType) = liftIO do
+    withVAO vao $ liftIO $ GL.drawElements mode numTris dataType nullPtr
 
 planeVertexList :: Int -> Int -> [(Float, Float, Float)]
 planeVertexList rows cols = concat [ [ (fromIntegral r / fromIntegral (rows-1), fromIntegral c / fromIntegral (cols-1), 0.0) 
@@ -151,8 +149,8 @@ createMeshAsset verts inds = liftIO do
     GL.vertexAttribPointer (GL.AttribLocation 1) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (3 * (sizeOf (0.0 :: Float)))))
     GL.vertexAttribArray (GL.AttribLocation 1) $= GL.Enabled
 
-    GL.vertexAttribPointer (GL.AttribLocation 2) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (6 * (sizeOf (0.0 :: Float)))))
-    GL.vertexAttribArray (GL.AttribLocation 2) $= GL.Enabled
+    GL.vertexAttribPointer (GL.AttribLocation 3) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (6 * (sizeOf (0.0 :: Float)))))
+    GL.vertexAttribArray (GL.AttribLocation 3) $= GL.Enabled
 
     GL.bindBuffer GL.ElementArrayBuffer $= Just indVBO
     GL.bufferData GL.ElementArrayBuffer $= (fromIntegral indicesSize, indices, GL.StaticDraw)
@@ -161,7 +159,7 @@ createMeshAsset verts inds = liftIO do
     GL.bindVertexArrayObject $= Nothing
     GL.deleteObjectName vertVBO
     GL.deleteObjectName indVBO
-    return $ MeshAsset vao (indicesSize `div` 3) ElementsArray
+    return $ MeshAsset vao (indicesSize `div` 3) Elements GL.Triangles GL.UnsignedInt
 
 
 createSphereAsset :: MonadIO m => Int -> m MeshAsset
@@ -176,6 +174,6 @@ createLinesAsset :: MonadIO m => [V3 Float] -> m MeshAsset
 createLinesAsset points = liftIO do
     let verts = concat [[x,y,z,0,0,1,0,0] | V3 x y z <- points]
     let indices = concat [ [i, i, i+1]
-                         | i <- [0..(length points)-2]
+                         | i <- [0..length points-2]
                          ]
     createMeshAsset verts indices
