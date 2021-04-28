@@ -101,11 +101,13 @@ executables:
   #   main: Main.hs
   #   dependencies:
   #   - universe-simulator
-  model-loading:
-    source-dirs: examples/model-loading
+  universe:
+    source-dirs: examples/universe
     main: Main.hs
     dependencies:
     - universe-simulator
+    - MonadRandom
+    - pqueue
     
 ghc-options:
 - -threaded
