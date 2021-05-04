@@ -20,14 +20,15 @@ import Control.Monad.Trans.Except
 import Data.Vector ((!), (!?))
 import Control.Monad
 import System.FilePath.Posix
-
+import Engine.ResourceManager
 
 import qualified Data.Text as T
 import qualified Data.Vector as V
 import qualified Data.HashMap.Strict as HM
 import qualified Data.ByteString as BS
 
--- whoever wrote this library was rude
+-- whoever wrote this library was rude,
+-- like seriously, when are you just going to load one module
 import qualified Codec.GlTF as TF
 import qualified Codec.GlTF.Mesh as TF
 import qualified Codec.GlTF.Accessor as TF
@@ -80,12 +81,18 @@ v2M44 _ = error "wrong number of elements"
 
 v2Quat (a,b,c,d) = Quaternion d (V3 a b c)
 
+getRight_ :: Either a b -> b
+getRight_ (Right x) = x
 
-loadGlTF :: MonadIO m 
-         => FilePath 
-         -> (String -> GL.AttribLocation) 
-         -> m   ( Either String 
-                    ( TF.Vector 
+instance MonadIO m => Resource m GLTFBits where
+    loadFromName name = getRight_ <$> loadGlTF ("resources/models/"<>name<>"/"<>name<>".gltf") \case 
+        "POSITION" -> GL.AttribLocation 0
+        "NORMAL" -> GL.AttribLocation 1
+        "TANGENT" -> GL.AttribLocation 2
+        "TEXCOORD_0" -> GL.AttribLocation 3
+        _ -> GL.AttribLocation (-1)
+
+type GLTFBits = ( TF.Vector 
                         ( Maybe [Int]
                         , Maybe Transform
                         , Maybe (MeshAsset, GL.TextureObject, GL.TextureObject)
@@ -95,7 +102,11 @@ loadGlTF :: MonadIO m
                         , Maybe Scene
                         )
                     )
-                )
+
+loadGlTF :: MonadIO m 
+         => FilePath 
+         -> (String -> GL.AttribLocation) 
+         -> m (Either String GLTFBits)
 loadGlTF filepath locations = liftIO $ runExceptT $ do
 
     model       <- ExceptT $ TF.fromFile filepath

@@ -10,6 +10,10 @@ import Control.Monad.IO.Class ( MonadIO(..) )
 import Linear
 import Foreign.Marshal.Array
 import Foreign.Ptr
+import Engine.ResourceManager
+
+instance MonadIO m => Resource m (GL.TextureObject, GL.TextureSize2D) where
+    loadFromName = loadTexture . ("resources/textures/"<>)
 
 -- | Create a texture using the pixel data
 createTexture   :: Int -- ^ Texture width

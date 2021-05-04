@@ -91,6 +91,18 @@ instance Semigroup GameState where (<>) = const
 instance Monoid GameState where mempty = Playing
 instance Component GameState where type Storage GameState = Global GameState
 
+instance Component GL.Program where type Storage GL.Program = StrMap GL.Program
+
+instance MonadIO m => ResourceManager m (StrMap GL.Program) where 
+   getResource sm name = do
+      hasRes <- explStrExists sm name
+      if hasRes 
+         then explGetStr sm name
+         else do
+            res <- loadShader ("resources/shaders/"<>name)
+            explSetStr sm name res
+            return res
+
 data Hud = Hud deriving Show
 
 data Thrust = Thrust { thrustForward :: Double
@@ -101,7 +113,7 @@ data Thrust = Thrust { thrustForward :: Double
                      , thrustYaw :: Double
                      } deriving Show
 
-                     
+
 
 -- newtype Rand = Rand StdGen deriving (Show, Eq)
 -- instance Semigroup Rand where (<>) = const

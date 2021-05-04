@@ -17,6 +17,12 @@ import Control.Monad.IO.Class
 import Engine.Shader
 import Engine.Types ()
 import Linear
+import Engine.ResourceManager
+
+instance MonadIO m => Resource m Font where
+    -- TODO: gotta figure out how to not hardcode those :-/ 
+    -- maybe not, who careds
+    loadFromName name = loadFont ("resources/fonts/"<>name) 48 =<< loadFromName "glyph"
 
 -- | 'Character' data type for fonts, contains everthing to render a 'Char'
 data Character = 
