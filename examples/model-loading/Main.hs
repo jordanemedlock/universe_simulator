@@ -68,13 +68,13 @@ debugLog msg = do
 
 initialize :: WorldSystem ()
 initialize = do
-    (moonTex, _) <- loadTexture "resources/textures/8k_moon.png"
+    TextureInfo moonTex _ <- loadTexture "resources/textures/8k_moon.png"
     program <- either error id <$> loadShader "resources/shaders/lighting"
     -- fixedLighting <- either error id <$> loadShader "resources/shaders/fixed_lighting"
     -- glyph <- either error id <$> loadShader "resources/shaders/glyph"
     -- font <- loadFont "resources/fonts/Inconsolata.ttf" 48 glyph
-    (selectTex, _) <- loadTexture "resources/textures/select_circle.png"
-    (unitTex, _) <- loadTexture "resources/textures/unit.png"
+    TextureInfo selectTex _ <- loadTexture "resources/textures/select_circle.png"
+    TextureInfo unitTex _ <- loadTexture "resources/textures/unit.png"
 
 
     debugLog "Loading gltf file"
@@ -303,9 +303,9 @@ updateHud = do
     (Vel cVel, Pos cPos) <- cfold (\_ (Camera, Vel cVel, Pos cPos) -> (Vel cVel, Pos cPos)) (Vel 0, Pos 0)
     let V3 vx vy vz = printToSpeed.(*10^^mant) <$> cVel
     let V3 px py pz = printToDist.(*10^^mant) <$> cPos
-    cmapM \(Hud, TextBox t f c s) -> do
+    cmapM \(Hud, TextBox t c s) -> do
         let str = printf "Velocity: %s %s %s Position: %s %s %s" vx vy vz px py pz
-        return (Hud, TextBox str f c s)
+        return (Hud, TextBox str c s)
 
 printToDist :: Double -> String
 printToDist x 

@@ -42,19 +42,20 @@ instance Component TerminalInput where type Storage TerminalInput = Unique Termi
 newtype Command = Command (Maybe Entity) deriving Show -- thats the previous command
 
 
-data TextBox = TextBox String Entity (V4 Double) Double deriving Show
+data TextBox = TextBox String (V4 Double) Double deriving Show
 
 data FormControl = FormControl deriving Show -- bool is focus
 data Focus = Focus deriving Show 
 newtype TextInput = TextInput Int deriving Show -- int is cursor pos
 newtype HasParent = HasParent Entity deriving Show
+newtype FontName = FontName String deriving Show
 
 defaultMapComponents :: [Name]
 defaultMapComponents = [ ''Pos, ''Pos2D, ''Rot, ''Scale, ''Size2D
                        , ''CamRot, ''Hidden, ''Texture, ''Shader
                        , ''Mesh, ''Console, ''Command, ''TextBox
                        , ''FormControl, ''Focus, ''TextInput
-                       , ''Transform, ''Scene, ''HasParent
+                       , ''Transform, ''Scene, ''HasParent, ''FontName
                        ]
 
 defaultAllComponents :: [Name]

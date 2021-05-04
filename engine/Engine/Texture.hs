@@ -10,16 +10,14 @@ import Control.Monad.IO.Class ( MonadIO(..) )
 import Linear
 import Foreign.Marshal.Array
 import Foreign.Ptr
-import Engine.ResourceManager
 
-instance MonadIO m => Resource m (GL.TextureObject, GL.TextureSize2D) where
-    loadFromName = loadTexture . ("resources/textures/"<>)
+data TextureInfo = TextureInfo GL.TextureObject GL.TextureSize2D deriving (Show)
 
 -- | Create a texture using the pixel data
 createTexture   :: Int -- ^ Texture width
                 -> Int -- ^ Texture height
                 -> GL.PixelData a -- ^ Texture pixel data
-                -> IO (GL.TextureObject, GL.TextureSize2D)
+                -> IO TextureInfo -- (GL.TextureObject, GL.TextureSize2D)
 createTexture width height textureData = do
     texId <- GL.genObjectName :: IO GL.TextureObject
 
@@ -34,7 +32,7 @@ createTexture width height textureData = do
 
     GL.textureBinding GL.Texture2D $= Nothing
 
-    return (texId, size)
+    return $ TextureInfo texId size
 
 unitTexture :: MonadIO m => V4 Float -> m GL.TextureObject
 unitTexture (V4 r g b a) = liftIO do
@@ -57,7 +55,7 @@ unitTexture (V4 r g b a) = liftIO do
 
 -- | Loads the texture from a png file
 loadTexture :: MonadIO m => String -- ^ Filename
-            -> m (GL.TextureObject, GL.TextureSize2D)
+            -> m TextureInfo
 loadTexture filename = liftIO do
     eimage <- readImage filename
 

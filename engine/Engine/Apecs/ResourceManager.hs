@@ -1,21 +1,23 @@
+{-# LANGUAGE TypeFamilies #-}
 module Engine.Apecs.ResourceManager where
 
 import Apecs
+import Apecs.Core
 import Engine
 
-data ResourceManagers = 
-    ResourceManagers 
-        (ResourceManager GL.Program)
-        (ResourceManager (GL.TextureObject, GL.TextureSize2D))
-        (ResourceManager Font)
-        (ResourceManager GLTFBits)
+-- data ResourceManagers = 
+--     ResourceManagers 
+--         (ResourceManager GL.Program)
+--         (ResourceManager (GL.TextureObject, GL.TextureSize2D))
+--         (ResourceManager Font)
+--         (ResourceManager GLTFBits)
 
-instance Semigroup ResourceManagers where
-    (ResourceManagers a b c d) <> (ResourceManagers a' b' c' d') = 
-        ResourceManagers (a <> a') (b <> b') (c <> c') (d <> d')
+-- instance Semigroup ResourceManagers where
+--     (ResourceManagers a b c d) <> (ResourceManagers a' b' c' d') = 
+--         ResourceManagers (a <> a') (b <> b') (c <> c') (d <> d')
 
-instance Monoid ResourceManagers where
-    mempty = ResourceManagers mempty mempty mempty mempty
+-- instance Monoid ResourceManagers where
+--     mempty = ResourceManagers mempty mempty mempty mempty
 
 
 -- instance (Get w m ResourceManagers, Set w m ResourceManagers, Resource m a) => HasResource (SystemT w m) a where

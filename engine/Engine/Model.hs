@@ -20,7 +20,6 @@ import Control.Monad.Trans.Except
 import Data.Vector ((!), (!?))
 import Control.Monad
 import System.FilePath.Posix
-import Engine.ResourceManager
 
 import qualified Data.Text as T
 import qualified Data.Vector as V
@@ -84,14 +83,6 @@ v2Quat (a,b,c,d) = Quaternion d (V3 a b c)
 getRight_ :: Either a b -> b
 getRight_ (Right x) = x
 
-instance MonadIO m => Resource m GLTFBits where
-    loadFromName name = getRight_ <$> loadGlTF ("resources/models/"<>name<>"/"<>name<>".gltf") \case 
-        "POSITION" -> GL.AttribLocation 0
-        "NORMAL" -> GL.AttribLocation 1
-        "TANGENT" -> GL.AttribLocation 2
-        "TEXCOORD_0" -> GL.AttribLocation 3
-        _ -> GL.AttribLocation (-1)
-
 type GLTFBits = ( TF.Vector 
                         ( Maybe [Int]
                         , Maybe Transform
@@ -134,13 +125,13 @@ loadGlTF filepath locations = liftIO $ runExceptT $ do
             baseColorTexIx          <- TF.index <$> exceptFromJust "baseColorTexture index" (TF.baseColorTexture pbr)
             baseColorTexIIx         <- TF.unImageIx <$> exceptFromJust "baseColorTexture" (TF.source =<< textures !? baseColorTexIx)
             (TF.URI baseColorImageUri) <- exceptFromJust "baseColorImageUri" $ imUri =<< images !? baseColorTexIIx 
-            (baseColorImage, _)     <- loadTexture (baseDir </> T.unpack baseColorImageUri)
+            TextureInfo baseColorImage _    <- loadTexture (baseDir </> T.unpack baseColorImageUri)
 
             
             metallicRoughnessTexIx  <- TF.index <$> exceptFromJust "metallicRoughnessTexture" (TF.metallicRoughnessTexture pbr)
             metallicRoughnessTexIIx <- TF.unImageIx <$> exceptFromJust "metallicRoughnessTexture" (TF.source =<< textures !? metallicRoughnessTexIx)
             (TF.URI metallicRoughnessImageUri) <- exceptFromJust "metallicRoughnessImageUri" $ imUri =<< images !? metallicRoughnessTexIIx 
-            (metallicRoughnessImage, _) <- loadTexture (baseDir </> T.unpack metallicRoughnessImageUri)
+            TextureInfo metallicRoughnessImage _ <- loadTexture (baseDir </> T.unpack metallicRoughnessImageUri)
             
             (TF.BufferViewIx indBVI) <- exceptFromJust "bufferView" $ accBufferView indAcc
             indBV                   <- exceptFromJust "indices bufferView" $ bufferViews !? indBVI

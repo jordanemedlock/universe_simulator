@@ -5,7 +5,7 @@ module Types where
 import Apecs
 import Linear
 import Language.Haskell.TH
-import Engine (Font(..))
+import Engine
 import qualified Graphics.Rendering.OpenGL as GL
 
 
@@ -91,17 +91,6 @@ instance Semigroup GameState where (<>) = const
 instance Monoid GameState where mempty = Playing
 instance Component GameState where type Storage GameState = Global GameState
 
-instance Component GL.Program where type Storage GL.Program = StrMap GL.Program
-
-instance MonadIO m => ResourceManager m (StrMap GL.Program) where 
-   getResource sm name = do
-      hasRes <- explStrExists sm name
-      if hasRes 
-         then explGetStr sm name
-         else do
-            res <- loadShader ("resources/shaders/"<>name)
-            explSetStr sm name res
-            return res
 
 data Hud = Hud deriving Show
 
@@ -121,7 +110,7 @@ data Thrust = Thrust { thrustForward :: Double
 -- instance Component Rand where type Storage Rand = Global Rand
 
 mapComponents :: [Name]
-mapComponents = [ ''Hud, ''Orbit, ''Font, ''Vel, ''Planet, ''RotVel
+mapComponents = [ ''Hud, ''Orbit, ''Vel, ''Planet, ''RotVel
                 , ''Overlay, ''Link, ''Color
                 , ''Mass, ''Kinematic, ''Static, ''Thrust
                 ]
@@ -130,6 +119,6 @@ nonMapComponents :: [Name]
 nonMapComponents = [ ''GameSettings, ''CursorPos, ''GameState
                    , ''Earth, ''Moon, ''Sun
                    , ''Mantissa, ''Translation
-                   , ''DebugState
+                   , ''DebugState, ''Font
                 --    , ''Rand 
                    ]

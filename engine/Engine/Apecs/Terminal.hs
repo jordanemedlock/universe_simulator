@@ -24,20 +24,20 @@ type HasTerminal w = ( HasTextBox w
 
 terminalInput :: (HasTerminal w) => Event -> System w () -> System w ()
 terminalInput (KeyEvent GLFW.Key'Escape i GLFW.KeyState'Released mods) leave = do
-    cmap \(TerminalInput, TextBox t f co s) -> (FormControl, Not @Focus, TextInput 0, TextBox "" f co s)
+    cmap \(TerminalInput, TextBox t co s) -> (FormControl, Not @Focus, TextInput 0, TextBox "" co s)
     leave
 
 terminalInput (KeyEvent GLFW.Key'Enter i GLFW.KeyState'Released mods) _ = 
-    cmapM \(TerminalInput, TextBox t f co s, Command mprev, Pos2D (V2 x y), Size2D size) -> do
+    cmapM \(TerminalInput, TextBox t co s, Command mprev, Pos2D (V2 x y), Size2D size) -> do
         -- runCommand t
         let consoleDeltaHeight = 40
         cmap \(Console, TextBox {}, Pos2D (V2 x y)) -> (Console, Pos2D (V2 x (y - consoleDeltaHeight)))
         newPrevEty <- newEntity ( Console
-                                , TextBox t f co s
+                                , TextBox t co s
                                 , Pos2D $ V2 x (y - consoleDeltaHeight), Size2D size
                                 , Command mprev
                                 )
-        return (TextBox "" f co s, Command $ Just newPrevEty, Pos2D $ V2 x y)
+        return (TextBox "" co s, Command $ Just newPrevEty, Pos2D $ V2 x y)
 terminalInput _ _ = return ()
 
 -- pushCommand :: String -> System World ()

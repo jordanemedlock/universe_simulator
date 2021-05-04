@@ -11,15 +11,8 @@ import System.Directory
 import Control.Monad
 import Control.Monad.Trans.Except
 import System.FilePath.Posix
-import Engine.ResourceManager
 
 
-instance MonadIO m => Resource m GL.Program where
-    loadFromName name = do
-        eprog <- loadShader ("resources/shaders/"<>name)
-        case eprog of 
-            Left m -> error m
-            Right p -> return p
 
 ifM :: (Monad m) => m Bool -> m a -> m a -> m a
 ifM c a b = do 

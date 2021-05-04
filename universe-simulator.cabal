@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b763af40f052a6260b2cc92b8a9eef26938f065b9455fa04c498e53ad3462963
+-- hash: cbe9d2227d1ecb5ab3145f36303d768729d9fa8a526bcc240db7109df2b14312
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -31,6 +31,7 @@ library
   other-modules:
       Engine.Apecs.FormControl
       Engine.Apecs.Model
+      Engine.Apecs.ResourceManager
       Engine.Apecs.Terminal
       Engine.Apecs.Types
       Engine.Apecs.Window
