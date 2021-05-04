@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cbe9d2227d1ecb5ab3145f36303d768729d9fa8a526bcc240db7109df2b14312
+-- hash: 32ef6bc45ef327d069284ed03e81b95487ce55b38a19eebbca656c8f2172b6e9
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -73,6 +73,74 @@ library
     , text
     , time
     , transformers
+    , unordered-containers
+    , vector
+  default-language: Haskell2010
+
+executable blank-window
+  main-is: Main.hs
+  other-modules:
+      Paths_universe_simulator
+  hs-source-dirs:
+      examples/blank-window
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables LambdaCase TypeApplications TypeFamilies MultiParamTypeClasses FlexibleContexts
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
+  build-depends:
+      GLFW-b >=3.3 && <4
+    , JuicyPixels >=3.3 && <4
+    , OpenGL >=3.0 && <4
+    , apecs
+    , base >=4.7 && <5
+    , bindings-GLFW >=3.3 && <4
+    , bytestring >=0.10 && <1
+    , directory
+    , filepath >=1.4 && <2
+    , freetype2 >=0.2 && <0.3
+    , gltf-codec
+    , lens >=4.18 && <5
+    , linear
+    , matrix >=0.3 && <0.4
+    , random
+    , raw-strings-qq
+    , template-haskell
+    , text
+    , time
+    , transformers
+    , universe-simulator
+    , unordered-containers
+    , vector
+  default-language: Haskell2010
+
+executable box
+  main-is: Main.hs
+  other-modules:
+      Paths_universe_simulator
+  hs-source-dirs:
+      examples/box
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables LambdaCase TypeApplications TypeFamilies MultiParamTypeClasses FlexibleContexts
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
+  build-depends:
+      GLFW-b >=3.3 && <4
+    , JuicyPixels >=3.3 && <4
+    , OpenGL >=3.0 && <4
+    , apecs
+    , base >=4.7 && <5
+    , bindings-GLFW >=3.3 && <4
+    , bytestring >=0.10 && <1
+    , directory
+    , filepath >=1.4 && <2
+    , freetype2 >=0.2 && <0.3
+    , gltf-codec
+    , lens >=4.18 && <5
+    , linear
+    , matrix >=0.3 && <0.4
+    , random
+    , raw-strings-qq
+    , template-haskell
+    , text
+    , time
+    , transformers
+    , universe-simulator
     , unordered-containers
     , vector
   default-language: Haskell2010
