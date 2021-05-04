@@ -56,16 +56,16 @@ library:
   # - freetype2 >=0.2 && <0.3
 
 executables:
-  # blank-window:
-  #   source-dirs: examples/blank-window
-  #   main: Main.hs
-  #   dependencies:
-  #   - universe-simulator
-  # box:
-  #   source-dirs: examples/box
-  #   main: Main.hs
-  #   dependencies:
-  #   - universe-simulator
+  blank-window:
+    source-dirs: examples/blank-window
+    main: Main.hs
+    dependencies:
+    - universe-simulator
+  box:
+    source-dirs: examples/box
+    main: Main.hs
+    dependencies:
+    - universe-simulator
   # textured-box:
   #   source-dirs: examples/textured-box
   #   main: Main.hs
