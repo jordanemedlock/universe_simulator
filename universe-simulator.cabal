@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0e886d67111a08e78ab9324fbb53390af3bd7c7d920d4ef86d5b6b092d2f1061
+-- hash: f09ba3a2779de953ebebd8898cfb6cf0cf504e3c4b9b19982b0dc756dc706bc1
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -117,6 +117,40 @@ executable box
       Paths_universe_simulator
   hs-source-dirs:
       examples/box
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables LambdaCase TypeApplications TypeFamilies MultiParamTypeClasses FlexibleContexts
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
+  build-depends:
+      GLFW-b >=3.3 && <4
+    , JuicyPixels >=3.3 && <4
+    , OpenGL >=3.0 && <4
+    , apecs
+    , base >=4.7 && <5
+    , bindings-GLFW >=3.3 && <4
+    , bytestring >=0.10 && <1
+    , directory
+    , filepath >=1.4 && <2
+    , freetype2 >=0.2 && <0.3
+    , gltf-codec
+    , lens >=4.18 && <5
+    , linear
+    , matrix >=0.3 && <0.4
+    , random
+    , raw-strings-qq
+    , template-haskell
+    , text
+    , time
+    , transformers
+    , universe-simulator
+    , unordered-containers
+    , vector
+  default-language: Haskell2010
+
+executable earth-sphere
+  main-is: Main.hs
+  other-modules:
+      Paths_universe_simulator
+  hs-source-dirs:
+      examples/earth-sphere
   default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables LambdaCase TypeApplications TypeFamilies MultiParamTypeClasses FlexibleContexts
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:

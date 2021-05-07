@@ -71,16 +71,11 @@ executables:
     main: Main.hs
     dependencies:
     - universe-simulator
-  # earth-sphere:
-  #   source-dirs: examples/earth-sphere
-  #   main: Main.hs
-  #   dependencies:
-  #   - universe-simulator
-  # camera-movement:
-  #   source-dirs: examples/camera-movement
-  #   main: Main.hs
-  #   dependencies:
-  #   - universe-simulator
+  earth-sphere:
+    source-dirs: examples/earth-sphere
+    main: Main.hs
+    dependencies:
+    - universe-simulator
   # ecs:
   #   source-dirs: examples/ecs
   #   main: Main.hs

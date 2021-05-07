@@ -152,8 +152,8 @@ createMeshAsset verts inds = liftIO do
     GL.vertexAttribPointer (GL.AttribLocation 1) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (3 * (sizeOf (0.0 :: Float)))))
     GL.vertexAttribArray (GL.AttribLocation 1) $= GL.Enabled
 
-    GL.vertexAttribPointer (GL.AttribLocation 3) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (6 * (sizeOf (0.0 :: Float)))))
-    GL.vertexAttribArray (GL.AttribLocation 3) $= GL.Enabled
+    GL.vertexAttribPointer (GL.AttribLocation 2) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (6 * (sizeOf (0.0 :: Float)))))
+    GL.vertexAttribArray (GL.AttribLocation 2) $= GL.Enabled
 
     GL.bindBuffer GL.ElementArrayBuffer $= Just indVBO
     GL.bufferData GL.ElementArrayBuffer $= (fromIntegral indicesSize, indices, GL.StaticDraw)
