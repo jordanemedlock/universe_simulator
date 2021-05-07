@@ -4,12 +4,13 @@ module Engine.Apecs.Model where
 import qualified Data.Vector as V
 import Engine.Apecs.Types 
 import Engine.Types
+import Engine.Model
 import Apecs
 import qualified Graphics.Rendering.OpenGL as GL
 import Data.Vector ((!), (!?))
 
 type GetSet w c = (Get w IO c, Set w IO c, Destroy w IO c) 
-type HasGlTF w =    ( GetSet w Transform, GetSet w Mesh, GetSet w TextureInfo
+type HasGlTF w =    ( GetSet w Transform, GetSet w Mesh, GetSet w Texture
                     , GetSet w Rot, GetSet w Scale, GetSet w Pos, GetSet w Scene
                     , GetSet w HasParent, Get w IO EntityCounter
                     )
@@ -28,22 +29,14 @@ invertChildren childrens = value
         value = foldr helper (replicate (length childrens) Nothing) $ zip [0..] childrens
 
 createGlTFEntities  :: HasGlTF w
-                    => V.Vector 
-                        ( Maybe [Int]
-                        , Maybe Transform
-                        , Maybe (MeshAsset, TextureInfo, TextureInfo)
-                        , Maybe Rot
-                        , Maybe Scale
-                        , Maybe Pos
-                        , Maybe Scene
-                        )
+                    => GLTFBits
                     -> SystemT w IO (V.Vector Entity)
 createGlTFEntities ns = do
     let mchildren = V.toList $ V.map (\(mc, _,_,_,_,_,_) -> mc) ns
     let parents = V.fromList $ invertChildren mchildren
     nodes <- V.forM ns $ \(_, mtransform, mmeshAsset, mrot, mscale, mpos, mscene) -> do
 
-        newEntity (mtransform, mtransform, (\(m, t, _) -> (Mesh m, t :: TextureInfo)) <$> mmeshAsset, mrot, mscale, mpos, mscene)
+        newEntity (mtransform, mtransform, (\(m, t, _) -> (Mesh m, Texture t)) <$> mmeshAsset, mrot, mscale, mpos, mscene)
 
     V.forM (V.zip nodes parents) $ \case
         (ety, Nothing) -> return ety

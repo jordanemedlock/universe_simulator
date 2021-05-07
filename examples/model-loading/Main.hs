@@ -147,7 +147,7 @@ drawObjects _ = cmapM_ $ \(Camera, Pos camPos, CamRot pitch yaw) -> do
         let scaleMat = scaled $ point scale
         let m1 = getTransformFrom pos rotMat scaleMat
         let (Transform trans) = fromMaybe (Transform m1) mtransform
-        let model = (realToFrac <$>) <$> trans                                                    
+        let model = (realToFrac <$>) <$> trans
         let (Color color) = fromMaybe (Color $ V4 1 1 1 1) mcolor
 
 

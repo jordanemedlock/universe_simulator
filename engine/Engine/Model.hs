@@ -86,7 +86,7 @@ getRight_ (Right x) = x
 type GLTFBits = ( TF.Vector 
                         ( Maybe [Int]
                         , Maybe Transform
-                        , Maybe (MeshAsset, TextureInfo, TextureInfo)
+                        , Maybe (MeshAsset, GL.TextureObject, GL.TextureObject)
                         , Maybe Rot
                         , Maybe Scale
                         , Maybe Pos
@@ -125,13 +125,13 @@ loadGlTF filepath locations = liftIO $ runExceptT $ do
             baseColorTexIx          <- TF.index <$> exceptFromJust "baseColorTexture index" (TF.baseColorTexture pbr)
             baseColorTexIIx         <- TF.unImageIx <$> exceptFromJust "baseColorTexture" (TF.source =<< textures !? baseColorTexIx)
             (TF.URI baseColorImageUri) <- exceptFromJust "baseColorImageUri" $ imUri =<< images !? baseColorTexIIx 
-            baseColorImage          <- loadTexture (baseDir </> T.unpack baseColorImageUri)
+            TextureInfo baseColorImage _ <- loadTexture (baseDir </> T.unpack baseColorImageUri)
 
             
             metallicRoughnessTexIx  <- TF.index <$> exceptFromJust "metallicRoughnessTexture" (TF.metallicRoughnessTexture pbr)
             metallicRoughnessTexIIx <- TF.unImageIx <$> exceptFromJust "metallicRoughnessTexture" (TF.source =<< textures !? metallicRoughnessTexIx)
             (TF.URI metallicRoughnessImageUri) <- exceptFromJust "metallicRoughnessImageUri" $ imUri =<< images !? metallicRoughnessTexIIx 
-            metallicRoughnessImage  <- loadTexture (baseDir </> T.unpack metallicRoughnessImageUri)
+            TextureInfo metallicRoughnessImage _ <- loadTexture (baseDir </> T.unpack metallicRoughnessImageUri)
             
             (TF.BufferViewIx indBVI) <- exceptFromJust "bufferView" $ accBufferView indAcc
             indBV                   <- exceptFromJust "indices bufferView" $ bufferViews !? indBVI
