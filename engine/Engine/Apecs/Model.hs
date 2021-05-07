@@ -9,7 +9,7 @@ import qualified Graphics.Rendering.OpenGL as GL
 import Data.Vector ((!), (!?))
 
 type GetSet w c = (Get w IO c, Set w IO c, Destroy w IO c) 
-type HasGlTF w =    ( GetSet w Transform, GetSet w Mesh, GetSet w Texture
+type HasGlTF w =    ( GetSet w Transform, GetSet w Mesh, GetSet w TextureInfo
                     , GetSet w Rot, GetSet w Scale, GetSet w Pos, GetSet w Scene
                     , GetSet w HasParent, Get w IO EntityCounter
                     )
@@ -31,7 +31,7 @@ createGlTFEntities  :: HasGlTF w
                     => V.Vector 
                         ( Maybe [Int]
                         , Maybe Transform
-                        , Maybe (MeshAsset, GL.TextureObject, GL.TextureObject)
+                        , Maybe (MeshAsset, TextureInfo, TextureInfo)
                         , Maybe Rot
                         , Maybe Scale
                         , Maybe Pos
@@ -43,7 +43,7 @@ createGlTFEntities ns = do
     let parents = V.fromList $ invertChildren mchildren
     nodes <- V.forM ns $ \(_, mtransform, mmeshAsset, mrot, mscale, mpos, mscene) -> do
 
-        newEntity (mtransform, mtransform, (\(m, t, _) -> (Mesh m, Texture t)) <$> mmeshAsset, mrot, mscale, mpos, mscene)
+        newEntity (mtransform, mtransform, (\(m, t, _) -> (Mesh m, t :: TextureInfo)) <$> mmeshAsset, mrot, mscale, mpos, mscene)
 
     V.forM (V.zip nodes parents) $ \case
         (ety, Nothing) -> return ety

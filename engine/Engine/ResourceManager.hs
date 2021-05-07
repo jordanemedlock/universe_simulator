@@ -13,6 +13,7 @@ import Engine.Shader
 import Engine.Texture
 import Engine.Model
 import Engine.Font
+import Engine.Types
 
 class Resource a where
    loadFromName :: MonadIO m => String -> m a
@@ -58,7 +59,7 @@ getRes name = do
    getResource store name
 
 
-instance Resource Shader where
+instance Resource GL.Program where
     loadFromName name = do
         eprog <- loadShader ("resources/shaders/"<>name)
         case eprog of 
@@ -74,8 +75,8 @@ instance Resource GLTFBits where
     loadFromName name = getRight_ <$> loadGlTF ("resources/models/"<>name<>"/"<>name<>".gltf") \case 
         "POSITION" -> GL.AttribLocation 0
         "NORMAL" -> GL.AttribLocation 1
-        "TANGENT" -> GL.AttribLocation 2
-        "TEXCOORD_0" -> GL.AttribLocation 3
+        "TANGENT" -> GL.AttribLocation 3
+        "TEXCOORD_0" -> GL.AttribLocation 2
         _ -> GL.AttribLocation (-1)
 
 
@@ -84,7 +85,7 @@ instance Resource Font where
     -- maybe not, who careds
     loadFromName name = loadFont ("resources/fonts/"<>name) 48 =<< loadFromName "glyph"
 
-instance Component Shader where type Storage Shader = StrMap Shader
+instance Component GL.Program where type Storage GL.Program = StrMap GL.Program
 instance Component GLTFBits where type Storage GLTFBits = StrMap GLTFBits
 instance Component Font where type Storage Font = StrMap Font
 instance Component TextureInfo where type Storage TextureInfo = StrMap  TextureInfo

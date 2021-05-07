@@ -1,5 +1,6 @@
 module Engine (
-  module Exports  
+  module Exports,
+  Program
 ) where
 
 import Engine.Shader as Exports
@@ -14,3 +15,4 @@ import Engine.Font as Exports
 import Engine.Events as Exports
 import Engine.Model as Exports
 import Engine.ResourceManager as Exports
+import Graphics.Rendering.OpenGL (Program)

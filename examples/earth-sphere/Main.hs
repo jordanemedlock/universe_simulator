@@ -6,7 +6,7 @@ import Linear
 
 
 data GameState = GameState 
-    { shader :: Shader
+    { shader :: Program
     , sphere :: MeshAsset 
     , texture :: TextureInfo 
     }

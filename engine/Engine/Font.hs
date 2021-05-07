@@ -15,30 +15,14 @@ import Foreign.Marshal.Array (newArray)
 import Control.Monad (foldM_)
 import Control.Monad.IO.Class
 import Engine.Shader
-import Engine.Types ()
+import Engine.Types
 import Linear
-
--- | 'Character' data type for fonts, contains everthing to render a 'Char'
-data Character = 
-    Character   { charTexId :: GL.TextureObject -- ^ OpenGL texture id for character
-                , charSize :: GL.TextureSize2D -- ^ Size of the character
-                , charBearing :: GL.Vector2 Int32 -- ^ Bearing/offset for the character 
-                , charAdvancement :: Int32 -- ^ Advancement/kerning for the character
-                }
-
--- | 'Font' data type contains everything to render a string using the font
-data Font = 
-    Font    { fontCharacters :: [Character] -- ^ A list of 'Character's in ASCII order
-            , fontShader :: Shader -- ^ Glyph shader for the font
-            , fontVAO :: GL.VertexArrayObject -- ^ Reusable VAO to hold the tris to draw
-            , fontVBO :: GL.BufferObject -- ^ Reusable VBO to hold the tris
-            }
 
 -- | Load a font from a TTF file 
 loadFont    :: (MonadIO m)
             => String   -- ^ Filename
             -> Int      -- ^ Font size/height in pixels
-            -> Shader   -- ^ Glyph shader to render the font
+            -> GL.Program   -- ^ Glyph shader to render the font
             -> m Font
 loadFont name height shader = liftIO $ ft_With_FreeType $ \ft -> 
     ft_With_Face ft name 0 $ \face -> do

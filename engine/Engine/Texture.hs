@@ -10,9 +10,8 @@ import Control.Monad.IO.Class ( MonadIO(..) )
 import Linear
 import Foreign.Marshal.Array
 import Foreign.Ptr
-import Engine.Shader
+import Engine.Types
 
-data TextureInfo = TextureInfo GL.TextureObject GL.TextureSize2D deriving (Show)
 
 -- | Create a texture using the pixel data
 createTexture   :: Int -- ^ Texture width
@@ -33,7 +32,7 @@ createTexture width height textureData = do
 
     GL.textureBinding GL.Texture2D $= Nothing
 
-    return $ TextureInfo texId size
+    return $ TextureInfo texId (V2 width height)
 
 unitTexture :: MonadIO m => V4 Float -> m GL.TextureObject
 unitTexture (V4 r g b a) = liftIO do

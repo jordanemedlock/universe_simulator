@@ -6,7 +6,7 @@ import Linear
 
 
 data GameState = GameState 
-    { shader :: Shader
+    { shader :: Program
     , cube :: MeshAsset
     , texture :: TextureInfo
     }
@@ -41,7 +41,6 @@ draw (GameState program cube texture) = do
         "lightColor"    $== (V4 1.0 1.0 1.0 1.0 :: V4 Float)
         
         setTexture 0 texture
-
         drawMeshAsset cube
 
 

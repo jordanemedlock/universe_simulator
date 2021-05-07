@@ -1,5 +1,15 @@
 {-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, FunctionalDependencies #-}
-module Engine.Types where
+module Engine.Types (
+    MeshType(..),
+    MeshAsset(..),
+    Event(..),
+    Character(..),
+    Font(..),
+    TextureInfo(..),
+    GL.Uniform(..),
+    GL.TextureObject(..),
+    GL.TextureSize2D(..)
+) where
 
 import Linear
 import Graphics.Rendering.OpenGL (($=))
@@ -8,6 +18,7 @@ import qualified Graphics.UI.GLFW as GLFW
 import Data.Foldable
 import Control.Lens.TH
 import GHC.Int
+
 
 data MeshType = Arrays | Elements deriving Show
 
@@ -22,6 +33,23 @@ data Event =  KeyEvent GLFW.Key Int GLFW.KeyState GLFW.ModifierKeys
             | CursorEvent Double Double 
             | CharEvent Char 
             deriving Show
+
+-- | 'Character' data type for fonts, contains everthing to render a 'Char'
+data Character = 
+    Character   { charTexId :: GL.TextureObject -- ^ OpenGL texture id for character
+                , charSize :: GL.TextureSize2D -- ^ Size of the character
+                , charBearing :: GL.Vector2 Int32 -- ^ Bearing/offset for the character 
+                , charAdvancement :: Int32 -- ^ Advancement/kerning for the character
+                } deriving Show
+
+-- | 'Font' data type contains everything to render a string using the font
+data Font = 
+    Font    { fontCharacters :: [Character] -- ^ A list of 'Character's in ASCII order
+            , fontShader :: GL.Program -- ^ Glyph shader for the font
+            , fontVAO :: GL.VertexArrayObject -- ^ Reusable VAO to hold the tris to draw
+            , fontVBO :: GL.BufferObject -- ^ Reusable VBO to hold the tris
+            } deriving Show 
+data TextureInfo = TextureInfo GL.TextureObject (V2 Int) deriving Show
 
 instance GL.UniformComponent a => GL.Uniform (V1 a) where 
     uniform loc = GL.makeStateVar getter setter

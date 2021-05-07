@@ -4,7 +4,7 @@ module Main where
 import Engine
 import Linear
 
-data GameState = GameState Shader MeshAsset
+data GameState = GameState Program MeshAsset
 
 windowSize :: V2 Int
 windowSize = V2 1920 1080

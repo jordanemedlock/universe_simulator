@@ -27,9 +27,9 @@ data CamRot = CamRot Double Double deriving Show
 data Hidden = Hidden deriving Show
 newtype Transform = Transform (M44 Double) deriving Show
 newtype Scene = Scene String deriving Show
-
-newtype Texture = Texture GL.TextureObject deriving Show
 newtype Shader = Shader GL.Program deriving Show
+newtype Texture = Texture TextureObject deriving Show
+
 newtype Mesh = Mesh MeshAsset deriving Show
 data Console = Console deriving Show
 
