@@ -29,7 +29,7 @@ data Character =
 -- | 'Font' data type contains everything to render a string using the font
 data Font = 
     Font    { fontCharacters :: [Character] -- ^ A list of 'Character's in ASCII order
-            , fontShader :: GL.Program -- ^ Glyph shader for the font
+            , fontShader :: Shader -- ^ Glyph shader for the font
             , fontVAO :: GL.VertexArrayObject -- ^ Reusable VAO to hold the tris to draw
             , fontVBO :: GL.BufferObject -- ^ Reusable VBO to hold the tris
             }
@@ -38,7 +38,7 @@ data Font =
 loadFont    :: (MonadIO m)
             => String   -- ^ Filename
             -> Int      -- ^ Font size/height in pixels
-            -> GL.Program   -- ^ Glyph shader to render the font
+            -> Shader   -- ^ Glyph shader to render the font
             -> m Font
 loadFont name height shader = liftIO $ ft_With_FreeType $ \ft -> 
     ft_With_Face ft name 0 $ \face -> do

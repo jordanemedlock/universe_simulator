@@ -58,7 +58,7 @@ getRes name = do
    getResource store name
 
 
-instance Resource GL.Program where
+instance Resource Shader where
     loadFromName name = do
         eprog <- loadShader ("resources/shaders/"<>name)
         case eprog of 
@@ -84,7 +84,7 @@ instance Resource Font where
     -- maybe not, who careds
     loadFromName name = loadFont ("resources/fonts/"<>name) 48 =<< loadFromName "glyph"
 
-instance Component GL.Program where type Storage GL.Program = StrMap GL.Program
+instance Component Shader where type Storage Shader = StrMap Shader
 instance Component GLTFBits where type Storage GLTFBits = StrMap GLTFBits
 instance Component Font where type Storage Font = StrMap Font
 instance Component TextureInfo where type Storage TextureInfo = StrMap  TextureInfo

@@ -1,224 +1,47 @@
 
 module Main where
 
-import qualified Graphics.UI.GLFW as GLFW
-import qualified Graphics.Rendering.OpenGL as GL
-import Graphics.Rendering.OpenGL (($=))
-import Foreign.Marshal.Array
-import Foreign.Ptr
-import Foreign.Storable
-import Data.Time (getCurrentTime, diffUTCTime, UTCTime)
 import Engine
-import Text.RawString.QQ
-import Control.Monad.IO.Class
-import Data.ByteString (ByteString)
 import Linear
 
 
 data GameState = GameState 
-    { shader :: GL.Program
-    , cube :: GL.VertexArrayObject
-    , texture :: GL.TextureObject
+    { shader :: Shader
+    , cube :: MeshAsset
+    , texture :: TextureInfo
     }
-
-vert :: ByteString
-vert = [r|
-#version 330 core
-layout (location = 0) in vec3 position;
-layout (location = 1) in vec3 normal;
-layout (location = 2) in vec2 texCoords;
-
-out vec3 FragPos;
-out vec3 Normal;
-out vec2 TexCoord;
-
-uniform mat4 projection;
-uniform mat4 view; 
-// uniform vec2 screenSize;
-uniform mat4 model;
-
-void main()
-{
-    FragPos = vec3(model * vec4(position, 1.0));
-    Normal = mat3(transpose(inverse(model))) * normal;
-
-    gl_Position = projection * view * vec4(FragPos, 1.0);
-    TexCoord = texCoords;
-}
-|]
-
-frag :: ByteString
-frag = [r|
-#version 330 core
-
-in vec3 FragPos;
-in vec3 Normal;
-in vec2 TexCoord;
-
-out vec4 FragColor;
-
-uniform vec4 ambientColor;
-uniform vec4 objectColor;
-
-uniform vec3 viewPos;
-
-uniform vec3 lightPos;
-uniform vec4 lightColor;
-
-uniform sampler2D objectTexture;
-
-void main()
-{
-    // constants
-    float ambientStrength = 0.1;
-    float specularStrength = 0.5;
-
-    // diffuse
-    vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);  
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec4 diffuse = diff * lightColor;
-
-    // ambient
-    vec4 ambient = ambientStrength * ambientColor;
-
-    // specular
-    vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec4 specular = specularStrength * spec * lightColor;
-
-    // result
-    vec4 result = (ambient + diffuse + specular) * texture(objectTexture, TexCoord);
-    // vec4 result = texture(objectTexture, TexCoord);
-    FragColor = result;
-}
-|]
-
-createCube :: IO GL.VertexArrayObject
-createCube = do
-    
-    let verticesL = [ (-0.5), (-0.5), (-0.5),   ( 0.0), ( 0.0), (-1.0),     0.0, 0.0
-                    , ( 0.5), (-0.5), (-0.5),   ( 0.0), ( 0.0), (-1.0),     1.0, 0.0
-                    , ( 0.5), ( 0.5), (-0.5),   ( 0.0), ( 0.0), (-1.0),     1.0, 1.0
-                    , ( 0.5), ( 0.5), (-0.5),   ( 0.0), ( 0.0), (-1.0),     1.0, 1.0
-                    , (-0.5), ( 0.5), (-0.5),   ( 0.0), ( 0.0), (-1.0),     0.0, 1.0
-                    , (-0.5), (-0.5), (-0.5),   ( 0.0), ( 0.0), (-1.0),     0.0, 0.0
-
-                    , (-0.5), (-0.5), ( 0.5),   ( 0.0), ( 0.0), ( 1.0),     0.0, 0.0
-                    , ( 0.5), (-0.5), ( 0.5),   ( 0.0), ( 0.0), ( 1.0),     1.0, 0.0
-                    , ( 0.5), ( 0.5), ( 0.5),   ( 0.0), ( 0.0), ( 1.0),     1.0, 1.0
-                    , ( 0.5), ( 0.5), ( 0.5),   ( 0.0), ( 0.0), ( 1.0),     1.0, 1.0
-                    , (-0.5), ( 0.5), ( 0.5),   ( 0.0), ( 0.0), ( 1.0),     0.0, 1.0
-                    , (-0.5), (-0.5), ( 0.5),   ( 0.0), ( 0.0), ( 1.0),     0.0, 0.0
-
-                    , (-0.5), ( 0.5), ( 0.5),   (-1.0), ( 0.0), ( 0.0),     1.0, 1.0
-                    , (-0.5), ( 0.5), (-0.5),   (-1.0), ( 0.0), ( 0.0),     1.0, 0.0
-                    , (-0.5), (-0.5), (-0.5),   (-1.0), ( 0.0), ( 0.0),     0.0, 0.0
-                    , (-0.5), (-0.5), (-0.5),   (-1.0), ( 0.0), ( 0.0),     0.0, 0.0
-                    , (-0.5), (-0.5), ( 0.5),   (-1.0), ( 0.0), ( 0.0),     0.0, 1.0
-                    , (-0.5), ( 0.5), ( 0.5),   (-1.0), ( 0.0), ( 0.0),     1.0, 1.0
-
-                    , ( 0.5), ( 0.5), ( 0.5),   ( 1.0), ( 0.0), ( 0.0),     1.0, 1.0
-                    , ( 0.5), ( 0.5), (-0.5),   ( 1.0), ( 0.0), ( 0.0),     1.0, 0.0
-                    , ( 0.5), (-0.5), (-0.5),   ( 1.0), ( 0.0), ( 0.0),     0.0, 0.0
-                    , ( 0.5), (-0.5), (-0.5),   ( 1.0), ( 0.0), ( 0.0),     0.0, 0.0
-                    , ( 0.5), (-0.5), ( 0.5),   ( 1.0), ( 0.0), ( 0.0),     0.0, 1.0
-                    , ( 0.5), ( 0.5), ( 0.5),   ( 1.0), ( 0.0), ( 0.0),     1.0, 1.0
-
-                    , (-0.5), (-0.5), (-0.5),   ( 0.0), (-1.0), ( 0.0),     0.0, 0.0
-                    , ( 0.5), (-0.5), (-0.5),   ( 0.0), (-1.0), ( 0.0),     1.0, 0.0
-                    , ( 0.5), (-0.5), ( 0.5),   ( 0.0), (-1.0), ( 0.0),     1.0, 1.0
-                    , ( 0.5), (-0.5), ( 0.5),   ( 0.0), (-1.0), ( 0.0),     1.0, 1.0
-                    , (-0.5), (-0.5), ( 0.5),   ( 0.0), (-1.0), ( 0.0),     0.0, 1.0
-                    , (-0.5), (-0.5), (-0.5),   ( 0.0), (-1.0), ( 0.0),     0.0, 0.0
-
-                    , (-0.5), ( 0.5), (-0.5),   ( 0.0), ( 1.0), ( 0.0),     0.0, 0.0
-                    , ( 0.5), ( 0.5), (-0.5),   ( 0.0), ( 1.0), ( 0.0),     1.0, 0.0
-                    , ( 0.5), ( 0.5), ( 0.5),   ( 0.0), ( 1.0), ( 0.0),     1.0, 1.0
-                    , ( 0.5), ( 0.5), ( 0.5),   ( 0.0), ( 1.0), ( 0.0),     1.0, 1.0
-                    , (-0.5), ( 0.5), ( 0.5),   ( 0.0), ( 1.0), ( 0.0),     0.0, 1.0
-                    , (-0.5), ( 0.5), (-0.5),   ( 0.0), ( 1.0), ( 0.0),     0.0, 0.0
-                    ] :: [Float]
-    vertices <- newArray verticesL
-    let verticesSize = fromIntegral $ sizeOf (0.0 :: Float) * length verticesL
-
-
-    -- must be vbo then vao
-    vao <- tempVBO GL.ArrayBuffer $ initVAO $ liftIO do
-        GL.bufferData GL.ArrayBuffer $= (verticesSize, vertices, GL.StaticDraw)
-
-        GL.vertexAttribPointer (GL.AttribLocation 0) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) nullPtr)
-        GL.vertexAttribArray (GL.AttribLocation 0) $= GL.Enabled
-
-        GL.vertexAttribPointer (GL.AttribLocation 1) $= (GL.ToFloat, GL.VertexArrayDescriptor 3 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (3 * (sizeOf (0.0 :: Float)))))
-        GL.vertexAttribArray (GL.AttribLocation 1) $= GL.Enabled
-
-        GL.vertexAttribPointer (GL.AttribLocation 2) $= (GL.ToFloat, GL.VertexArrayDescriptor 2 GL.Float (fromIntegral $ 8 * sizeOf (0.0 :: Float)) (nullPtr `plusPtr` (6 * (sizeOf (0.0 :: Float)))))
-        GL.vertexAttribArray (GL.AttribLocation 2) $= GL.Enabled
-    return vao
 
 
 main :: IO ()
 main = do
-    window <- initWindow (V2 1920 1080) "Box example"
+    window <- initWindow (V2 1920 1080) "Textured box"
 
-    Just program <- compileShader vert frag Nothing 
+    program <- loadFromName "fixed_lighting" 
+    texture <- loadFromName "test_texture.png"
+    cube <- createCubeAsset
 
-    let fov = 45 :: Float
-    let ratio = 1920 / 1080.0
-    let near = 0.1
-    let far = 100
+    playIO (GameState program cube texture) window draw (const return) (const return)
 
-    projection <- perspectiveMatrix fov ratio near far
-
-    withShader program $ "projection" $== projection
-
-    cubeVAO <- createCube
-
-    (tex, _) <- loadTexture "resources/test_texture.png"
-
-    startTime <- getCurrentTime
-
-    mainLoop window startTime (GameState program cubeVAO tex)
-
-    GLFW.terminate
-
-mainLoop :: GLFW.Window -> UTCTime -> GameState -> IO ()
-mainLoop window previousTime (GameState program cubeVAO tex) = do
-    GLFW.pollEvents
-
-    GL.clearColor $= GL.Color4 0 0 0 1
-    GL.clear [GL.ColorBuffer, GL.DepthBuffer]
-
-    thisTime <- getCurrentTime
-    let deltaTime = diffUTCTime thisTime previousTime
-    let dt = (realToFrac deltaTime :: Double)
-
-    model <- eye4 :: IO (GL.GLmatrix Float)
+draw :: GameState -> IO ()
+draw (GameState program cube texture) = do
     
-    view <- lookAtMatrix (GL.Vector3 1 1 1) (GL.Vector3 0 0 0) (GL.Vector3 0 1 0) :: IO (GL.GLmatrix Float)
+    let view = lookAt (V3 1 1 1) (V3 0 0 0) (V3 0 1 0 :: V3 Float)
+    let ratio = 1920 / 1080 :: Float
+    projection <- perspectiveMatrix 45 ratio 0.1 100.0
 
     withShader program do
-        "model"         $== model
+        "projection"    $== projection
+        "model"         $== (identity :: M44 Float)
         "view"          $== view
 
-        "objectColor"   $== (GL.Color4 1.0 0.5 0.3 1.0 :: GL.Color4 Float)
-        "ambientColor"  $== (GL.Color4 1.0 1.0 1.0 1.0 :: GL.Color4 Float)
-        "viewPos"       $== (GL.Vector3 1 1 1 :: GL.Vector3 Float)
-        "lightPos"      $== (GL.Vector3 1.1 1.0 2.0 :: GL.Vector3 Float)
-        "lightColor"    $== (GL.Color4 1.0 1.0 1.0 1.0 :: GL.Color4 Float)
-
-
-        liftIO $ GL.activeTexture $= GL.TextureUnit 0
-        liftIO $ GL.textureBinding GL.Texture2D $= Just tex
-
-        withVAO cubeVAO $ liftIO $ GL.drawArrays GL.Triangles 0 36 -- size of the cube array
+        "objectColor"   $== (V4 1.0 0.5 0.3 1.0 :: V4 Float)
+        "ambientColor"  $== (V4 1.0 1.0 1.0 1.0 :: V4 Float)
+        "viewPos"       $== (V3 1 1 1 :: V3 Float)
+        "lightPos"      $== (V3 1.1 1.0 2.0 :: V3 Float)
+        "lightColor"    $== (V4 1.0 1.0 1.0 1.0 :: V4 Float)
         
+        setTexture 0 texture
 
-    GLFW.swapBuffers window
-    shouldClose <- GLFW.windowShouldClose window
-    if shouldClose 
-        then return ()
-        else mainLoop window thisTime (GameState program cubeVAO tex)
+        drawMeshAsset cube
+
 

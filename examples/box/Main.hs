@@ -3,12 +3,8 @@ module Main where
 
 import Engine
 import Linear
-import qualified Graphics.Rendering.OpenGL as GL
 
-data GameState = GameState 
-    { shader :: GL.Program
-    , cube :: MeshAsset
-    }
+data GameState = GameState Shader MeshAsset
 
 windowSize :: V2 Int
 windowSize = V2 1920 1080

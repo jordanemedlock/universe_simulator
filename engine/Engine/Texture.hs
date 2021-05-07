@@ -10,6 +10,7 @@ import Control.Monad.IO.Class ( MonadIO(..) )
 import Linear
 import Foreign.Marshal.Array
 import Foreign.Ptr
+import Engine.Shader
 
 data TextureInfo = TextureInfo GL.TextureObject GL.TextureSize2D deriving (Show)
 
@@ -72,3 +73,14 @@ loadTexture filename = liftIO do
 
             VS.unsafeWith idata 
                 (createTexture width height . GL.PixelData GL.RGBA GL.UnsignedByte)
+
+setTexture :: MonadIO m => Int -> TextureInfo -> m ()
+setTexture texUnit (TextureInfo tex _) = liftIO do
+    GL.activeTexture $= GL.TextureUnit (fromIntegral texUnit)
+    GL.textureBinding GL.Texture2D $= Just tex
+
+unsetTexture :: MonadIO m => Int -> m ()
+unsetTexture texUnit = liftIO do
+    GL.activeTexture $= GL.TextureUnit (fromIntegral texUnit)
+    GL.textureBinding GL.Texture2D $= Nothing
+    

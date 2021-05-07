@@ -12,7 +12,7 @@ import Control.Monad
 import Control.Monad.Trans.Except
 import System.FilePath.Posix
 
-
+newtype Shader = Shader GL.Program deriving Show
 
 ifM :: (Monad m) => m Bool -> m a -> m a -> m a
 ifM c a b = do 
@@ -28,7 +28,7 @@ readIfExists path = liftIO $ ifM (doesFileExist path)
                                  (Right <$> BS.readFile path) 
                                  (return $ Left $ "File does not exist " <> path)
 
-loadShader :: (MonadIO m) => String -> m (Either String GL.Program)
+loadShader :: (MonadIO m) => String -> m (Either String Shader)
 loadShader filePath = runExceptT do
     let vertFile = filePath <.> "vert"
     let fragFile = filePath <.> "frag"
@@ -45,7 +45,7 @@ compileShader   :: (MonadIO m)
                 => BS.ByteString -- ^ Vertex Soure
                 -> BS.ByteString -- ^ Fragment Source
                 -> Maybe BS.ByteString -- ^ Optional Geometry Source
-                -> m (Either String GL.Program)
+                -> m (Either String Shader)
 compileShader vertexSource fragmentSource mGeometrySource = liftIO do
     vertex <- GL.createShader GL.VertexShader
     fragment <- GL.createShader GL.FragmentShader
@@ -101,23 +101,23 @@ compileShader vertexSource fragmentSource mGeometrySource = liftIO do
                 then do
                     GL.deleteObjectNames $ [vertex, fragment] ++ maybe [] (:[]) mGeometry
 
-                    return $ Right program
+                    return $ Right $ Shader program
                 else return $ Left "Failed to link shader"
 
-type ShaderMonad = ReaderT GL.Program
+type ShaderMonad = ReaderT Shader
 type VAOMonad = ReaderT GL.VertexArrayObject
 type VBOMonad = ReaderT GL.BufferObject
 
-withShader :: MonadIO m => GL.Program -> ShaderMonad m a -> m a
-withShader prog f = do
+withShader :: MonadIO m => Shader -> ShaderMonad m a -> m a
+withShader (Shader prog) f = do
     liftIO $ GL.currentProgram $= Just prog
-    value <- runReaderT f prog
+    value <- runReaderT f (Shader prog)
     liftIO $ GL.currentProgram $= Nothing
     return value
 
 ($==) :: (GL.Uniform a, MonadIO m) => String -> a -> ShaderMonad m ()
 name $== value = do
-    prog <- ask
+    (Shader prog) <- ask
     location <- liftIO $ GL.uniformLocation prog name
     liftIO $ GL.uniform location $= value
 

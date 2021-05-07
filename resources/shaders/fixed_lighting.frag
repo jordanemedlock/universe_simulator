@@ -20,7 +20,7 @@ void main()
 {
     // result
     // vec4 result = (ambient + diffuse + specular) * texture(objectTexture, TexCoord);
-    vec4 result = objectColor * texture(objectTexture, TexCoord);
+    vec4 result = texture(objectTexture, TexCoord);
     if (result.a < 0.5) discard; else FragColor = result;
     FragColor = result;
 }

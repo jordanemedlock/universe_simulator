@@ -66,11 +66,11 @@ executables:
     main: Main.hs
     dependencies:
     - universe-simulator
-  # textured-box:
-  #   source-dirs: examples/textured-box
-  #   main: Main.hs
-  #   dependencies:
-  #   - universe-simulator
+  textured-box:
+    source-dirs: examples/textured-box
+    main: Main.hs
+    dependencies:
+    - universe-simulator
   # earth-sphere:
   #   source-dirs: examples/earth-sphere
   #   main: Main.hs
