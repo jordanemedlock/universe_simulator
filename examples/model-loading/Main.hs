@@ -26,11 +26,9 @@ import qualified Data.Text as T
 import System.FilePath.Posix
 import Foreign.Ptr
 
-instance Component GLFW.Window where type Storage GLFW.Window = Unique GLFW.Window
-
 
 makeMapComponents $ defaultMapComponents <> mapComponents
-makeWorld "World" $ defaultAllComponents <> mapComponents <> nonMapComponents <> [''GLFW.Window]
+makeWorld "World" $ defaultAllComponents <> mapComponents <> nonMapComponents
 
 -- type RandIO = RandT StdGen IO
 type WorldSystem a = SystemT World IO a -- I want dem monads!!!!
@@ -325,11 +323,6 @@ printToSpeed x
     | abs x < c / 100 = printf "%5.5fGm/s" (x/(10^^6))
     | otherwise = printf "%5.5fc" (x/c)
 
-
-clamp :: (Ord a) => a -> a -> a -> a
-clamp min max x | x < min = min
-                | x > max = max
-                | otherwise = x
 
 
 -- getAll :: forall w m c. (Members w m c, Get w m c) => SystemT w m [c]

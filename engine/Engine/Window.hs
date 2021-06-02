@@ -22,7 +22,11 @@ debugCallback msg = do
     print msg
 
 initWindow :: MonadIO m => V2 Int -> String -> m GLFW.Window
-initWindow (V2 width height) title = liftIO do
+initWindow size title = do
+    initWindowWithErrors size title errorCallback debugCallback
+
+initWindowWithErrors :: MonadIO m => V2 Int -> String -> GLFW.ErrorCallback -> (GL.DebugMessage -> IO ()) -> m GLFW.Window
+initWindowWithErrors (V2 width height) title errorCallback debugCallback = liftIO do
     GLFW.setErrorCallback $ Just errorCallback
 
     initialized <- GLFW.init
@@ -55,18 +59,14 @@ initWindow (V2 width height) title = liftIO do
                     GL.depthFunc $= Just GL.Lequal
         
                     return window
-            
-
-playIO :: w
+playIO :: IORef w
        -> GLFW.Window
        -> (w -> IO ())
        -> (Event -> w -> IO w)
        -> (Double -> w -> IO w)
        -> IO ()
-playIO world win draw handle step = do
+playIO worldRef win draw handle step = do
     let debug = True
-
-    worldRef <- newIORef world
     
     initEventCallbacks win handle worldRef
 

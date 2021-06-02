@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f09ba3a2779de953ebebd8898cfb6cf0cf504e3c4b9b19982b0dc756dc706bc1
+-- hash: e2be9dcb9dba5c85752dd61a5e8215ea7e86d74bb77ae184570178e96a347861
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -28,12 +28,16 @@ library
   exposed-modules:
       Engine
       Engine.Apecs
+      Engine.Prelude
   other-modules:
+      Engine.Apecs.Draw
       Engine.Apecs.FormControl
+      Engine.Apecs.Logging
       Engine.Apecs.Model
       Engine.Apecs.ResourceManager
       Engine.Apecs.Terminal
       Engine.Apecs.Types
+      Engine.Apecs.Unified
       Engine.Apecs.Window
       Engine.Camera
       Engine.Events
@@ -44,7 +48,9 @@ library
       Engine.Shader
       Engine.Texture
       Engine.Types
-      Engine.Utils
+      Engine.Utilities
+      Engine.Utilities.Color
+      Engine.Utilities.Noise
       Engine.Vector
       Engine.Window
       Paths_universe_simulator
@@ -67,6 +73,7 @@ library
     , lens >=4.18 && <5
     , linear
     , matrix >=0.3 && <0.4
+    , pretty-terminal
     , random
     , raw-strings-qq
     , template-haskell
@@ -100,6 +107,7 @@ executable blank-window
     , lens >=4.18 && <5
     , linear
     , matrix >=0.3 && <0.4
+    , pretty-terminal
     , random
     , raw-strings-qq
     , template-haskell
@@ -134,6 +142,7 @@ executable box
     , lens >=4.18 && <5
     , linear
     , matrix >=0.3 && <0.4
+    , pretty-terminal
     , random
     , raw-strings-qq
     , template-haskell
@@ -168,6 +177,42 @@ executable earth-sphere
     , lens >=4.18 && <5
     , linear
     , matrix >=0.3 && <0.4
+    , pretty-terminal
+    , random
+    , raw-strings-qq
+    , template-haskell
+    , text
+    , time
+    , transformers
+    , universe-simulator
+    , unordered-containers
+    , vector
+  default-language: Haskell2010
+
+executable minecraft
+  main-is: Main.hs
+  other-modules:
+      Paths_universe_simulator
+  hs-source-dirs:
+      examples/minecraft
+  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables LambdaCase TypeApplications TypeFamilies MultiParamTypeClasses FlexibleContexts
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
+  build-depends:
+      GLFW-b >=3.3 && <4
+    , JuicyPixels >=3.3 && <4
+    , OpenGL >=3.0 && <4
+    , apecs
+    , base >=4.7 && <5
+    , bindings-GLFW >=3.3 && <4
+    , bytestring >=0.10 && <1
+    , directory
+    , filepath >=1.4 && <2
+    , freetype2 >=0.2 && <0.3
+    , gltf-codec
+    , lens >=4.18 && <5
+    , linear
+    , matrix >=0.3 && <0.4
+    , pretty-terminal
     , random
     , raw-strings-qq
     , template-haskell
@@ -203,6 +248,7 @@ executable model-loading
     , lens >=4.18 && <5
     , linear
     , matrix >=0.3 && <0.4
+    , pretty-terminal
     , random
     , raw-strings-qq
     , template-haskell
@@ -237,6 +283,7 @@ executable textured-box
     , lens >=4.18 && <5
     , linear
     , matrix >=0.3 && <0.4
+    , pretty-terminal
     , random
     , raw-strings-qq
     , template-haskell

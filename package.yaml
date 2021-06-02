@@ -42,12 +42,14 @@ dependencies:
 - gltf-codec
 - unordered-containers
 - text
+- pretty-terminal
 
 library:
   source-dirs: engine
   exposed-modules: 
   - Engine
   - Engine.Apecs
+  - Engine.Prelude
   # dependencies:
   # - GLFW-b >=3.3 && <4
   # - OpenGL >=3.0 && <4
@@ -98,6 +100,11 @@ executables:
   #   - universe-simulator
   model-loading:
     source-dirs: examples/model-loading
+    main: Main.hs
+    dependencies:
+    - universe-simulator
+  minecraft:
+    source-dirs: examples/minecraft
     main: Main.hs
     dependencies:
     - universe-simulator

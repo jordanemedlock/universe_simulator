@@ -14,8 +14,6 @@ uniform vec3 viewPos;
 uniform vec3 lightPos;
 uniform vec4 lightColor;
 
-uniform sampler2D objectTexture;
-
 void main()
 {
     // constants
@@ -40,9 +38,5 @@ void main()
     vec4 specular = specularStrength * spec * lightColor;
     specular.a = 1.0;
 
-    // result
-    vec4 result = (ambient + diffuse + specular) * texture(objectTexture, TexCoord);
-    // vec4 result = texture(objectTexture, TexCoord);
-    // if (result.a < 0.5) discard; else FragColor = result;
-    FragColor = result;
+    FragColor = ambient + diffuse + specular;
 }

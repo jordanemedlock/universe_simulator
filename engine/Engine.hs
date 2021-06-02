@@ -6,7 +6,7 @@ module Engine (
 import Engine.Shader as Exports
 import Engine.Texture as Exports
 import Engine.Types as Exports
-import Engine.Utils as Exports
+import Engine.Utilities as Exports
 import Engine.Vector as Exports
 import Engine.Window as Exports
 import Engine.Mesh as Exports
