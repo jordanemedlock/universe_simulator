@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.35.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f09ba3a2779de953ebebd8898cfb6cf0cf504e3c4b9b19982b0dc756dc706bc1
+-- hash: dc114fcb0a02cde8e525221fe6e89fbdb0f2e5a7fb8c5f537a4d7a8527380a66
 
 name:           universe-simulator
 version:        0.1.0.0
@@ -30,7 +30,6 @@ library
       Engine.Apecs
   other-modules:
       Engine.Apecs.FormControl
-      Engine.Apecs.Model
       Engine.Apecs.ResourceManager
       Engine.Apecs.Terminal
       Engine.Apecs.Types
@@ -39,7 +38,6 @@ library
       Engine.Events
       Engine.Font
       Engine.Mesh
-      Engine.Model
       Engine.ResourceManager
       Engine.Shader
       Engine.Texture
@@ -50,23 +48,34 @@ library
       Paths_universe_simulator
   hs-source-dirs:
       engine
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables LambdaCase TypeApplications TypeFamilies MultiParamTypeClasses FlexibleContexts
+  default-extensions:
+      QuasiQuotes
+      OverloadedStrings
+      OverloadedLists
+      BlockArguments
+      FlexibleInstances
+      ScopedTypeVariables
+      LambdaCase
+      TypeApplications
+      TypeFamilies
+      MultiParamTypeClasses
+      FlexibleContexts
+      DuplicateRecordFields
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
-      GLFW-b >=3.3 && <4
-    , JuicyPixels >=3.3 && <4
-    , OpenGL >=3.0 && <4
+      GLFW-b >=3.3
+    , JuicyPixels >=3.3
+    , OpenGL >=3.0
     , apecs
-    , base >=4.7 && <5
-    , bindings-GLFW >=3.3 && <4
-    , bytestring >=0.10 && <1
+    , base >=4.7
+    , bindings-GLFW >=3.3
+    , bytestring >=0.10
     , directory
-    , filepath >=1.4 && <2
-    , freetype2 >=0.2 && <0.3
-    , gltf-codec
-    , lens >=4.18 && <5
+    , filepath >=1.4
+    , freetype2 >=0.2
+    , lens >=4.18
     , linear
-    , matrix >=0.3 && <0.4
+    , matrix >=0.3
     , random
     , raw-strings-qq
     , template-haskell
@@ -83,23 +92,34 @@ executable blank-window
       Paths_universe_simulator
   hs-source-dirs:
       examples/blank-window
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables LambdaCase TypeApplications TypeFamilies MultiParamTypeClasses FlexibleContexts
+  default-extensions:
+      QuasiQuotes
+      OverloadedStrings
+      OverloadedLists
+      BlockArguments
+      FlexibleInstances
+      ScopedTypeVariables
+      LambdaCase
+      TypeApplications
+      TypeFamilies
+      MultiParamTypeClasses
+      FlexibleContexts
+      DuplicateRecordFields
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
-      GLFW-b >=3.3 && <4
-    , JuicyPixels >=3.3 && <4
-    , OpenGL >=3.0 && <4
+      GLFW-b >=3.3
+    , JuicyPixels >=3.3
+    , OpenGL >=3.0
     , apecs
-    , base >=4.7 && <5
-    , bindings-GLFW >=3.3 && <4
-    , bytestring >=0.10 && <1
+    , base >=4.7
+    , bindings-GLFW >=3.3
+    , bytestring >=0.10
     , directory
-    , filepath >=1.4 && <2
-    , freetype2 >=0.2 && <0.3
-    , gltf-codec
-    , lens >=4.18 && <5
+    , filepath >=1.4
+    , freetype2 >=0.2
+    , lens >=4.18
     , linear
-    , matrix >=0.3 && <0.4
+    , matrix >=0.3
     , random
     , raw-strings-qq
     , template-haskell
@@ -117,23 +137,34 @@ executable box
       Paths_universe_simulator
   hs-source-dirs:
       examples/box
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables LambdaCase TypeApplications TypeFamilies MultiParamTypeClasses FlexibleContexts
+  default-extensions:
+      QuasiQuotes
+      OverloadedStrings
+      OverloadedLists
+      BlockArguments
+      FlexibleInstances
+      ScopedTypeVariables
+      LambdaCase
+      TypeApplications
+      TypeFamilies
+      MultiParamTypeClasses
+      FlexibleContexts
+      DuplicateRecordFields
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
-      GLFW-b >=3.3 && <4
-    , JuicyPixels >=3.3 && <4
-    , OpenGL >=3.0 && <4
+      GLFW-b >=3.3
+    , JuicyPixels >=3.3
+    , OpenGL >=3.0
     , apecs
-    , base >=4.7 && <5
-    , bindings-GLFW >=3.3 && <4
-    , bytestring >=0.10 && <1
+    , base >=4.7
+    , bindings-GLFW >=3.3
+    , bytestring >=0.10
     , directory
-    , filepath >=1.4 && <2
-    , freetype2 >=0.2 && <0.3
-    , gltf-codec
-    , lens >=4.18 && <5
+    , filepath >=1.4
+    , freetype2 >=0.2
+    , lens >=4.18
     , linear
-    , matrix >=0.3 && <0.4
+    , matrix >=0.3
     , random
     , raw-strings-qq
     , template-haskell
@@ -151,58 +182,34 @@ executable earth-sphere
       Paths_universe_simulator
   hs-source-dirs:
       examples/earth-sphere
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables LambdaCase TypeApplications TypeFamilies MultiParamTypeClasses FlexibleContexts
+  default-extensions:
+      QuasiQuotes
+      OverloadedStrings
+      OverloadedLists
+      BlockArguments
+      FlexibleInstances
+      ScopedTypeVariables
+      LambdaCase
+      TypeApplications
+      TypeFamilies
+      MultiParamTypeClasses
+      FlexibleContexts
+      DuplicateRecordFields
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
-      GLFW-b >=3.3 && <4
-    , JuicyPixels >=3.3 && <4
-    , OpenGL >=3.0 && <4
+      GLFW-b >=3.3
+    , JuicyPixels >=3.3
+    , OpenGL >=3.0
     , apecs
-    , base >=4.7 && <5
-    , bindings-GLFW >=3.3 && <4
-    , bytestring >=0.10 && <1
+    , base >=4.7
+    , bindings-GLFW >=3.3
+    , bytestring >=0.10
     , directory
-    , filepath >=1.4 && <2
-    , freetype2 >=0.2 && <0.3
-    , gltf-codec
-    , lens >=4.18 && <5
+    , filepath >=1.4
+    , freetype2 >=0.2
+    , lens >=4.18
     , linear
-    , matrix >=0.3 && <0.4
-    , random
-    , raw-strings-qq
-    , template-haskell
-    , text
-    , time
-    , transformers
-    , universe-simulator
-    , unordered-containers
-    , vector
-  default-language: Haskell2010
-
-executable model-loading
-  main-is: Main.hs
-  other-modules:
-      Types
-      Paths_universe_simulator
-  hs-source-dirs:
-      examples/model-loading
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables LambdaCase TypeApplications TypeFamilies MultiParamTypeClasses FlexibleContexts
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
-  build-depends:
-      GLFW-b >=3.3 && <4
-    , JuicyPixels >=3.3 && <4
-    , OpenGL >=3.0 && <4
-    , apecs
-    , base >=4.7 && <5
-    , bindings-GLFW >=3.3 && <4
-    , bytestring >=0.10 && <1
-    , directory
-    , filepath >=1.4 && <2
-    , freetype2 >=0.2 && <0.3
-    , gltf-codec
-    , lens >=4.18 && <5
-    , linear
-    , matrix >=0.3 && <0.4
+    , matrix >=0.3
     , random
     , raw-strings-qq
     , template-haskell
@@ -220,23 +227,34 @@ executable textured-box
       Paths_universe_simulator
   hs-source-dirs:
       examples/textured-box
-  default-extensions: QuasiQuotes OverloadedStrings OverloadedLists BlockArguments FlexibleInstances ScopedTypeVariables LambdaCase TypeApplications TypeFamilies MultiParamTypeClasses FlexibleContexts
+  default-extensions:
+      QuasiQuotes
+      OverloadedStrings
+      OverloadedLists
+      BlockArguments
+      FlexibleInstances
+      ScopedTypeVariables
+      LambdaCase
+      TypeApplications
+      TypeFamilies
+      MultiParamTypeClasses
+      FlexibleContexts
+      DuplicateRecordFields
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
   build-depends:
-      GLFW-b >=3.3 && <4
-    , JuicyPixels >=3.3 && <4
-    , OpenGL >=3.0 && <4
+      GLFW-b >=3.3
+    , JuicyPixels >=3.3
+    , OpenGL >=3.0
     , apecs
-    , base >=4.7 && <5
-    , bindings-GLFW >=3.3 && <4
-    , bytestring >=0.10 && <1
+    , base >=4.7
+    , bindings-GLFW >=3.3
+    , bytestring >=0.10
     , directory
-    , filepath >=1.4 && <2
-    , freetype2 >=0.2 && <0.3
-    , gltf-codec
-    , lens >=4.18 && <5
+    , filepath >=1.4
+    , freetype2 >=0.2
+    , lens >=4.18
     , linear
-    , matrix >=0.3 && <0.4
+    , matrix >=0.3
     , random
     , raw-strings-qq
     , template-haskell
@@ -246,4 +264,52 @@ executable textured-box
     , universe-simulator
     , unordered-containers
     , vector
+  default-language: Haskell2010
+
+executable vulkan-starter
+  main-is: Main.hs
+  other-modules:
+      Paths_universe_simulator
+  hs-source-dirs:
+      examples/vulkan-starter
+  default-extensions:
+      QuasiQuotes
+      OverloadedStrings
+      OverloadedLists
+      BlockArguments
+      FlexibleInstances
+      ScopedTypeVariables
+      LambdaCase
+      TypeApplications
+      TypeFamilies
+      MultiParamTypeClasses
+      FlexibleContexts
+      DuplicateRecordFields
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-binds -Wunused-imports
+  build-depends:
+      GLFW-b >=3.3
+    , JuicyPixels >=3.3
+    , OpenGL >=3.0
+    , apecs
+    , base >=4.7
+    , bindings-GLFW >=3.3
+    , bytestring >=0.10
+    , directory
+    , filepath >=1.4
+    , freetype2 >=0.2
+    , lens >=4.18
+    , linear
+    , matrix >=0.3
+    , pretty-simple >=3.3
+    , random
+    , raw-strings-qq
+    , template-haskell
+    , text
+    , time
+    , transformers
+    , universe-simulator
+    , unordered-containers
+    , vector
+    , vulkan
+    , vulkan-utils
   default-language: Haskell2010

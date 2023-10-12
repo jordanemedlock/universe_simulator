@@ -19,29 +19,28 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/jordanemedlock/universe_simulator#readme>
 
 dependencies:
-- base >= 4.7 && < 5
-- GLFW-b >=3.3 && <4
-- OpenGL >=3.0 && <4
-- bindings-GLFW >=3.3 && <4
-- JuicyPixels >=3.3 && <4
-- freetype2 >=0.2 && <0.3
-- bytestring >=0.10 && <1
-- filepath >=1.4 && <2
-- matrix >=0.3 && <0.4
+- base >= 4.7
+- GLFW-b >=3.3
+- OpenGL >=3.0
+- bindings-GLFW >=3.3
+- JuicyPixels >=3.3
+- freetype2 >=0.2
+- bytestring >=0.10
+- filepath >=1.4
+- matrix >=0.3
 - linear
 - raw-strings-qq
 - time 
 - vector
 - transformers
-- lens >=4.18 && <5
+- lens >=4.18
 - directory
 - apecs
 - template-haskell
-- freetype2 >=0.2 && <0.3
 - random
-- gltf-codec
 - unordered-containers
 - text
+# - gltf-codec
 
 library:
   source-dirs: engine
@@ -96,11 +95,20 @@ executables:
   #   main: Main.hs
   #   dependencies:
   #   - universe-simulator
-  model-loading:
-    source-dirs: examples/model-loading
+  # model-loading:
+  #   source-dirs: examples/model-loading
+  #   main: Main.hs
+  #   dependencies:
+  #   - universe-simulator
+  vulkan-starter:
+    source-dirs: examples/vulkan-starter
     main: Main.hs
     dependencies:
+    - vulkan
+    - vulkan-utils
+    - pretty-simple >=3.3
     - universe-simulator
+    # extra-libraries: moltenVK
     
 ghc-options:
 - -threaded
@@ -125,3 +133,4 @@ default-extensions:
 - TypeFamilies
 - MultiParamTypeClasses
 - FlexibleContexts
+- DuplicateRecordFields

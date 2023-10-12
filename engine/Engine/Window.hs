@@ -10,6 +10,7 @@ import Engine.Events
 import Control.Monad
 import Data.IORef
 import Data.Time (getCurrentTime, diffUTCTime)
+import System.Info (os)
 
 errorCallback :: Show a => a -> [Char] -> IO ()
 errorCallback err msg = do
@@ -21,6 +22,32 @@ debugCallback :: Show a => a -> IO ()
 debugCallback msg = do
     print msg
 
+initGL :: MonadIO m => V2 Int -> m ()
+initGL (V2 width height) = liftIO do
+    
+    GL.debugOutput $= GL.Enabled
+    
+    when (os /= "darwin") do
+        -- TODO: Figure out how to debug in macOS
+        GL.debugMessageCallback $= Just debugCallback
+
+    GL.viewport $= (GL.Position 0 0, GL.Size (fromIntegral width) (fromIntegral height))
+
+    GL.blend $= GL.Enabled
+    GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
+    GL.depthFunc $= Just GL.Lequal
+
+whenNothing :: Applicative f => Maybe a -> f a -> f a
+whenNothing (Just x) _ = pure x
+whenNothing Nothing  m = m
+
+
+initWindowGL :: MonadIO m => V2 Int -> String -> m GLFW.Window
+initWindowGL size title = do
+    win <- initWindow size title
+    initGL size
+    return win
+
 initWindow :: MonadIO m => V2 Int -> String -> m GLFW.Window
 initWindow (V2 width height) title = liftIO do
     GLFW.setErrorCallback $ Just errorCallback
@@ -31,30 +58,17 @@ initWindow (V2 width height) title = liftIO do
             errorCallback GLFW.Error'NotInitialized "Game Initialization Failed"
             error "Game Initialization Failed"
         else do
-
-            GLFW.windowHint (GLFW.WindowHint'ContextVersionMajor 3)
-            GLFW.windowHint (GLFW.WindowHint'ContextVersionMinor 3)
-            GLFW.windowHint (GLFW.WindowHint'OpenGLProfile GLFW.OpenGLProfile'Core)
+            GLFW.windowHint (GLFW.WindowHint'ClientAPI GLFW.ClientAPI'NoAPI)
+            GLFW.windowHint (GLFW.WindowHint'OpenGLForwardCompat True) -- This is for mac
             GLFW.windowHint (GLFW.WindowHint'Resizable False)
                 
             mwindow <- GLFW.createWindow (fromIntegral width) (fromIntegral height) title Nothing Nothing
         
             GLFW.makeContextCurrent mwindow
         
-            case mwindow of
-                Nothing -> error "window failed to initialize"
-                Just window -> do
-                    
-                    GL.debugOutput $= GL.Enabled
-                    GL.debugMessageCallback $= Just debugCallback
-        
-                    GL.viewport $= (GL.Position 0 0, GL.Size (fromIntegral width) (fromIntegral height))
-        
-                    GL.blend $= GL.Enabled
-                    GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
-                    GL.depthFunc $= Just GL.Lequal
-        
-                    return window
+            whenNothing mwindow do
+                merr <- GLFW.getError 
+                error $ "window failed to initialize with error: " ++ (show merr)
             
 
 playIO :: w
@@ -74,8 +88,8 @@ playIO world win draw handle step = do
     let loop prevTime = do
             GLFW.pollEvents
 
-            GL.clearColor $= GL.Color4 0 0 0 1
-            GL.clear [GL.ColorBuffer, GL.DepthBuffer]
+            -- GL.clearColor $= GL.Color4 0 0 0 1
+            -- GL.clear [GL.ColorBuffer, GL.DepthBuffer]
 
 
             newTime <- getCurrentTime

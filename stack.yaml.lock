@@ -5,15 +5,22 @@
 
 packages:
 - completed:
-    hackage: gltf-codec-0.1.0.2@sha256:9d8b877cffde7bebdf6d3c584b730d505e5f091eafabcd8a1a91d6eccf124228,2544
+    hackage: vulkan-3.23@sha256:c68c376321911a1a06056191b3ff5254009c3b5a1b554ac2bf33dc648ce6fb2d,31305
     pantry-tree:
-      size: 1665
-      sha256: f50f20e176ed05b902289520a496957e3657341506f123f00c4583520bde386e
+      sha256: 9c8254e8022dca7d1548623e45bd53e77ee9837d06441471e4d62d304f2ecf99
+      size: 84788
   original:
-    hackage: gltf-codec-0.1.0.2@sha256:9d8b877cffde7bebdf6d3c584b730d505e5f091eafabcd8a1a91d6eccf124228,2544
+    hackage: vulkan-3.23
+- completed:
+    hackage: vulkan-utils-0.5.10.1@sha256:744b88cdcb4e6606abfbcc7bf24dbb8b16a005d156021e59e1402b95cc63c811,3959
+    pantry-tree:
+      sha256: 6586e020cc361e49c585ace11da8fba6f184465831ac59ec3466328d52ec18c7
+      size: 2226
+  original:
+    hackage: vulkan-utils-0.5.10.1
 snapshots:
 - completed:
-    size: 533252
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/27.yaml
-    sha256: c2aaae52beeacf6a5727c1010f50e89d03869abfab6d2c2658ade9da8ed50c73
-  original: lts-16.27
+    sha256: 5cacb39a2c21842535dc0a31e2005d3b1eb18e451a89d58c28381e1efdb9520f
+    size: 647983
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2022/11/12.yaml
+  original: nightly-2022-11-12
